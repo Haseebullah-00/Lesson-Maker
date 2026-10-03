@@ -64,7 +64,7 @@ import lessonmaker.composeapp.generated.resources.ic_youtube
 @Composable
 fun LoginScreenFlow(newRouts: (String) -> Unit)
 {
-    ///
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     Box(

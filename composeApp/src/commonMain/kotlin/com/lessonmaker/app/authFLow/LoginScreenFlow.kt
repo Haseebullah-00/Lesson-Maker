@@ -75,6 +75,8 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
         )
     {
         /////
+
+        ////
         MainGradientBg()
         Column(
             modifier = Modifier

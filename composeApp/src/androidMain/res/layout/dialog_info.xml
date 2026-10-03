@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <import type="android.view.View"/>
+        <variable
+            name="viewModel"
+            type="com.lessonmaker.app.infoDialog.InfoDialogViewModel" />
+    </data>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+
+            <LinearLayout
+                android:padding="@dimen/_5sdp"
+                android:id="@+id/MiddleBox"
+                android:background="@drawable/edit_bg_popup"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+
+                    <LinearLayout
+                        tools:visibility="gone"
+                        android:visibility="@{viewModel.showTitle?View.VISIBLE:View.GONE,default=gone}"
+                        android:layout_marginTop="@dimen/_25sdp"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:gravity="center"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            tools:visibility="visible"
+                            android:visibility="@{viewModel.showBlackHeading?View.VISIBLE:View.GONE,default=gone}"
+                            android:text="@{viewModel.title}"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:textColor="@color/black"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:gravity="center"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            tools:text="Select payment mode Select payment mode Select payment mode Select payment mode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="@{viewModel.title}"
+                            android:textColor="#202020"
+                            android:textSize="18sp"
+                            android:visibility="@{viewModel.showBlackHeading?View.GONE:View.VISIBLE,default=gone}"
+                            tools:visibility="visible" />
+                    </LinearLayout>
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        tools:visibility="gone"
+                        android:visibility="@{viewModel.showLogo?View.VISIBLE:View.GONE,default=gone}"
+                        android:id="@+id/tickimage"
+                        android:layout_width="@dimen/_45sdp"
+                        android:layout_height="@dimen/_45sdp"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="@dimen/_20sdp"
+                        />
+
+                    <TextView
+                        tools:visibility="visible"
+                        android:visibility="@{viewModel.showHeading?View.VISIBLE:View.GONE,default=gone}"
+                        android:layout_marginHorizontal="@dimen/_20sdp"
+                        android:text="@{viewModel.heading}"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="@dimen/_14sdp"
+                        android:gravity="center_horizontal"
+                        tools:text="Select payment mode Select payment mode Select payment mode"
+                        android:textAlignment="center"
+                        android:textColor="@color/black"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        tools:visibility="gone"
+                        android:visibility="@{viewModel.showSubHading?View.VISIBLE:View.GONE,default=gone}"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:text="@{viewModel.subHeading}"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:layout_marginTop="@dimen/_7sdp"
+                        tools:text="money_return_to_wallet money_return_to_wallet money_return_to_wallet money_return_to_wallet money_return_to_wallet money_return_to_wallet money_return_to_wallet "
+                        android:textAlignment="center"
+                        android:textColor="#202020"
+                        android:textSize="15sp" />
+
+
+                    <LinearLayout
+                        android:layout_marginTop="@dimen/_10sdp"
+                        android:layout_marginBottom="@dimen/_15sdp"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <com.google.android.material.button.MaterialButton
+                            tools:visibility="visible"
+                            style="@style/popup_button"
+                            android:paddingHorizontal="@dimen/_5sdp"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:onClick="@{viewModel::onNoButtonClicked}"
+                            android:visibility="@{viewModel.showNo?View.VISIBLE:View.GONE,default=gone}"
+                            android:text="@{viewModel.noText}"
+                            android:minWidth="@dimen/_120sdp"
+                            android:maxWidth="@dimen/_150sdp"
+                            android:paddingVertical="@dimen/_5sdp"
+                            android:layout_width="@dimen/_100sdp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            tools:text="@string/cancel"
+                            android:textColor="@color/whiteColor"
+                            android:textAllCaps="false"
+                            android:textSize="18sp" />
+                        <com.google.android.material.button.MaterialButton
+                            android:maxWidth="@dimen/_120sdp"
+                            style="@style/popup_button"
+                            android:textAllCaps="false"
+                            android:textColor="@color/whiteColor"
+                            android:paddingHorizontal="@dimen/_5sdp"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:onClick="@{viewModel::onYesButtonClicked}"
+                            tools:visibility="visible"
+                            android:visibility="@{viewModel.showYes?View.VISIBLE:View.GONE,default=gone}"
+                            android:text="@{viewModel.yesText}"
+                            android:paddingVertical="@dimen/_5sdp"
+                            android:layout_width="@dimen/_100sdp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            tools:text="@string/ok"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</layout>

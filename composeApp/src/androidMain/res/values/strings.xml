@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Lesson Maker</string>
+    <string name="MAPS_API_KEY">AIzaSyAiKMywS5ogG-jOFts4cX8i9OBdRyH44fE</string>
+
+
+    <!--Info popup -->
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+
+
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="location_permission_title">Location permission required</string>
+    <string name="location_permission_heading">Location permission is required. Please provide location permission from settings</string>
+    <string name="only_uae_address">Oops! We are currently serving Dubai only</string>
+
+    <string name="exit">Exit</string>
+    <string name="settings">Settings</string>
+    <string name="storage_permission_title">Storage permission required</string>
+    <string name="storage_permission_heading">Storage permission is required. Please provide Storage permission from settings</string>
+
+    <string name="camera_permission_title">Camera permission required</string>
+    <string name="camera_permission_heading">Camera permission is required. Please provide Storage permission from settings</string>
+
+    <string name="default_notification_channel_id">UrbanMobChannel</string>
+    <string name="notification_permission_denied_please_enable_from_application_setting_page">Notification permission denied please enable from application setting page</string>
+    <string name="show_notification_permission">Show notification permission?</string>
+    <string name="notification_permission_is_not_provided_need_this_permission_for_smooth_user_experience">Notification permission is not provided, need this permission for smooth user experience</string>
+
+
+    <string name="payment_cancel">Payment Canceled</string>
+    <string name="payment_failed">Payment Failed</string>
+
+</resources>

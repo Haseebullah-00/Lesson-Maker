@@ -47,9 +47,12 @@ import com.lessonmaker.app.theme.TextSize14
 import com.lessonmaker.app.theme.TextSize16
 import com.lessonmaker.app.theme.TextSize18
 import com.lessonmaker.app.theme.TextSize22
+import com.lessonmaker.app.theme.TextSize32
 import com.lessonmaker.app.theme.White
 import com.lessonmaker.app.theme.bgColor
 import com.lessonmaker.app.theme.bold
+import com.lessonmaker.app.theme.boldExtraBold
+import com.lessonmaker.app.theme.grey94
 import com.lessonmaker.app.theme.semiBold
 import com.lessonmaker.app.utility.handleEmpty
 
@@ -70,18 +73,13 @@ class SplashActivity : AppCompatActivity() {
                     .background(bgColor)
             )
             {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_splash_bg),
-                    contentDescription = "splash_logo",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+
                 Image(
                     painter = painterResource(id = R.drawable.ic_splash_main_logo),
                     contentDescription = "splash_logo",
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .size(250.dp)
+                        .size(96.dp)
                 )
                 Box(
                     modifier = Modifier
@@ -89,7 +87,7 @@ class SplashActivity : AppCompatActivity() {
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 30.dp),
 
-                    contentAlignment = Alignment.Center // Center the text within the Box
+                    contentAlignment = Alignment.Center
                 )
                 {
                     Column(
@@ -99,59 +97,17 @@ class SplashActivity : AppCompatActivity() {
                             .padding(bottom = 15.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_youtube),
-                                contentDescription = "youtube",
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = "/@ettanehsan",
-                                style = TextSize18().Medium(),
-                                color = White,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(30.dp))
                         Text(
-                            text = buildAnnotatedString {
-                                withStyle(
-                                    style = SpanStyle(
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = White
-                                    )
-                                ) {
-                                    append("Created by")
-                                }
-                                append(" ")
-                                withStyle(
-                                    style = SpanStyle(
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = White
-                                    )
-                                ) {
-                                    append("Ehsan Adouane,")
-                                }
-                                append("\n")
-                                withStyle(
-                                    style = SpanStyle(
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = White
-                                    )
-                                ) {
-                                    append("Science & Tech Innovator")
-                                }
-                            },
+                            text = "Lesson Maker",
+                            style = TextSize32().boldExtraBold(),
+                            color = White
+                        )
 
-                            color = White,
-                            style = TextSize18(),
-                            textAlign = TextAlign.Center
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "A Smarter Way to Create and Learn",
+                            style = TextSize14().Medium(),
+                            color = grey94
                         )
                     }
                 }

@@ -73,44 +73,35 @@ class SplashActivity : AppCompatActivity() {
                     .background(bgColor)
             )
             {
-
-                Image(
-                    painter = painterResource(id = R.drawable.ic_splash_main_logo),
-                    contentDescription = "splash_logo",
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(96.dp)
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 30.dp),
-
-                    contentAlignment = Alignment.Center
-                )
-                {
-                    Column(
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_splash_main_logo),
+                        contentDescription = "splash_logo",
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(bottom = 15.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Lesson Maker",
-                            style = TextSize32().boldExtraBold(),
-                            color = White
-                        )
+                            .size(96.dp)
+                    )
 
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "A Smarter Way to Create and Learn",
-                            style = TextSize14().Medium(),
-                            color = grey94
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Lesson Maker",
+                        style = TextSize32().boldExtraBold(),
+                        color = White
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "A Smarter Way to Create and Learn",
+                        style = TextSize14().Medium(),
+                        color = grey94
+                    )
+
+
                 }
+
 
             }
         }

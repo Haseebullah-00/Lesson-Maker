@@ -1,6 +1,7 @@
 package com.lessonmaker.app.di
 
 
+import com.lessonmaker.app.authFLow.AllBooksVM
 import com.russhwolf.settings.Settings
 import com.lessonmaker.app.mainScreen.DashboardViewModel
 import com.lessonmaker.app.network.ApiService
@@ -31,6 +32,7 @@ val appModule = module {
 //    viewModelOf(::CMSViewModel)
 //    viewModelOf(::OTPVerifyViewModelSingUp)
   //  viewModelOf(::RegisterViewModel)
+    viewModelOf(::AllBooksVM)
 
 }
 val authModule = module {

@@ -10,6 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -25,6 +26,28 @@ suspend inline fun <reified T> HttpClient.safePost(
 ): T {
     return try {
         val response: HttpResponse = this.post(urlString) { block() }
+        when (response.status) {
+            HttpStatusCode.OK, HttpStatusCode.Created -> response.body()
+            else -> throw ApiException(response.status, response.bodyAsText())
+        }
+    } catch (e: ClientRequestException) { // 4xx Errors
+        throw ApiException(statusCode = e.response.status, customMessage =  e.response.bodyAsText(), apiName = urlString, parameters = e.response.request.url.parameters.toString())
+    } catch (e: ServerResponseException) { // 5xx Errors
+        throw ApiException(statusCode = e.response.status, customMessage =  e.response.bodyAsText(), apiName = urlString, parameters = e.response.request.url.parameters.toString())
+    }catch (e: IOException) { // Other Errors (Timeout, No Internet, etc.)
+        throw ApiException(statusCode = HttpStatusCode(0,""), customMessage =  "Time out", apiName = urlString)
+    }
+    catch (e: Exception) { // Other Errors (Timeout, No Internet, etc.)
+        throw ApiException(statusCode = HttpStatusCode(0,""), customMessage =  "canceled", apiName = urlString)
+    }
+}
+
+suspend inline fun <reified T> HttpClient.safeGet(
+    urlString: String,
+    crossinline block: HttpRequestBuilder.() -> Unit = {}
+): T {
+    return try {
+        val response: HttpResponse = this.get(urlString) { block() }
         when (response.status) {
             HttpStatusCode.OK, HttpStatusCode.Created -> response.body()
             else -> throw ApiException(response.status, response.bodyAsText())
@@ -59,6 +82,8 @@ abstract class BaseRepository {
             ApiResult.Error(e.statusCode, e.message ?: "Unknown error")
         }
     }
+
+
 
 }
 

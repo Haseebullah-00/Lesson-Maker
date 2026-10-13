@@ -75,7 +75,8 @@ class SplashActivity : AppCompatActivity() {
             {
                 Column(modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.Center)
+                    .align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_splash_main_logo),

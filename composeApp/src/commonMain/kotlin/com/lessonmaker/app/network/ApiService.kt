@@ -5,6 +5,7 @@ import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
 import com.lessonmaker.app.extensionFunctions.handleNull
 import com.lessonmaker.app.models.auth.OtpResponse
+import com.lessonmaker.app.models.book.BooksResponse
 import com.lessonmaker.app.shared.platformExtensions.deviceType
 
 import io.ktor.client.HttpClient
@@ -41,6 +42,18 @@ class ApiService(
                     parameter("password", password)
                     parameter("device_type", deviceType())
                     parameter("fcm_token", sharedPreferenceManager.getFcmToken.handleNull())
+                }
+            )
+        }
+    }
+
+
+    suspend fun getAllBooks(): ApiResult<BooksResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Book/GetBooks"),
+                block = {
+
                 }
             )
         }

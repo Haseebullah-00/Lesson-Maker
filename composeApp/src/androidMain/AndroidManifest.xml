@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".base.MainApplication"
         android:allowBackup="true"
@@ -8,23 +10,26 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.LessonMaker">
+
         <activity
+            android:name=".splash.SplashActivity"
             android:exported="true"
-            android:theme="@style/ThemForSplash"
-            android:name=".splash.SplashActivity">
+            android:theme="@style/ThemForSplash">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
         <activity
-            android:exported="false"
-            android:name=".MainActivity">
+            android:name=".MainActivity"
+            android:exported="false" />
 
-        </activity>
     </application>
 
 </manifest>
+

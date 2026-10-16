@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,31 +27,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import coil3.Image
 import com.lessonmaker.app.common.MainButton
 import com.lessonmaker.app.common.MainGradientBg
 import com.lessonmaker.app.common.SimpleInputFieldWithError
 import com.lessonmaker.app.common.SimplePasswordInputField
-import com.lessonmaker.app.common.roundedShapeForInput
-import com.lessonmaker.app.mainScreen.DashboardScreen
+import com.lessonmaker.app.common.dialogue.MediaPickerInterface
+import com.lessonmaker.app.common.dialogue.MediaSourcePicker
+import com.lessonmaker.app.shared.media.excel.readSpreadsheet
+import com.lessonmaker.app.shared.media.excel.rememberGalleryManagerForExcel
+import com.lessonmaker.app.shared.media.pdf.rememberGalleryManagerForPdf
 import com.lessonmaker.app.theme.Medium
-import com.lessonmaker.app.theme.PrimaryColor
 import com.lessonmaker.app.theme.Regular
 import com.lessonmaker.app.theme.TextSize14
 import com.lessonmaker.app.theme.TextSize16
 import com.lessonmaker.app.theme.TextSize18
 import com.lessonmaker.app.theme.TextSize32
 import com.lessonmaker.app.theme.White
-import com.lessonmaker.app.theme.backClr
 import com.lessonmaker.app.theme.blurClr
 import com.lessonmaker.app.theme.bold
 import com.lessonmaker.app.theme.buttonBackClr
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import lessonmaker.composeapp.generated.resources.Res
@@ -61,12 +63,94 @@ import lessonmaker.composeapp.generated.resources.check_box
 import lessonmaker.composeapp.generated.resources.google
 import lessonmaker.composeapp.generated.resources.ic_youtube
 
+data class StudentExcelModel(
+    val aridNo: String,
+    val name: String,
+    val technology: String
+)
+
+
+fun List<List<String>>.toStudentList(): List<StudentExcelModel> {
+    return this.drop(1) // Skip Excel header row
+        .mapNotNull { row ->
+            val aridNo = row.getOrNull(0)?.trim().orEmpty()
+            val name = row.getOrNull(1)?.trim().orEmpty()
+            val technology = row.getOrNull(2)?.trim().orEmpty()
+
+            if (aridNo.isNotBlank()) {
+                StudentExcelModel(
+                    aridNo = aridNo,
+                    name = name,
+                    technology = technology
+                )
+            } else {
+                null
+            }
+        }
+}
+@Composable
+fun StudentItem(
+    student: StudentExcelModel,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onClick() },
+        shape = RoundedCornerShape(10.dp),
+        // highlight color when selected
+        backgroundColor = if (isSelected) Color(0xFFFFE082) else White,
+        elevation = 4.dp
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = student.name,
+                color = Color.Black,
+                style = TextSize16().Medium()
+            )
+            Text(
+                text = "${student.aridNo}  •  ${student.technology}",
+                color = Color.DarkGray,
+                style = TextSize14().Regular()
+            )
+        }
+    }
+}
 @Composable
 fun LoginScreenFlow(newRouts: (String) -> Unit)
 {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showPicker by remember { mutableStateOf(false) }
+
+    var selectedArid by remember { mutableStateOf<String?>(null) }
+
+    val scope = rememberCoroutineScope()
+
+    var students by remember { mutableStateOf<List<StudentExcelModel>>(emptyList()) }
+
+    val excelManager = rememberGalleryManagerForExcel { excel ->
+        if (excel == null) return@rememberGalleryManagerForExcel
+        scope.launch(Dispatchers.Default) {
+            val bytes = excel.toByteArray() ?: return@launch
+            val rows = readSpreadsheet(excel.getFileName(), bytes)
+            val list = rows.toStudentList()
+
+            println("Students: ${list.size}")
+            list.forEach { println(it) }
+
+            students = list
+        }
+    }   // <-- no comma here
+    val pdfManager = rememberGalleryManagerForPdf { pdf ->
+        // handle the selected PDF
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -89,6 +173,24 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
         )
         {
             Spacer(modifier = Modifier.height(70.dp))
+
+            if (students.isNotEmpty()) {
+                Text(
+                    text = "Students (${students.size})",
+                    color = White,
+                    style = TextSize18().Medium()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                students.forEach { student ->
+                    StudentItem(
+                        student = student,
+                        isSelected = student.aridNo == selectedArid,
+                        onClick = { selectedArid = student.aridNo }
+                    )
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
 
             Text(
                 text = "Welcome Back!",
@@ -246,7 +348,13 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
                     horizontalArrangement = Arrangement.Center
                 )
                 {
-                    socialLoginCard(Res.drawable.apple, onClick = {})
+
+                        socialLoginCard(Res.drawable.apple, onClick = {
+                                showPicker=true
+                        })
+
+
+
                     Spacer(modifier = Modifier.width(20.dp))
                     socialLoginCard(Res.drawable.google, onClick = {})
 
@@ -298,7 +406,29 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
 
         }
     }
+
+    if (showPicker) {
+        MediaSourcePicker(
+            type = "excel", // or "pdf"
+            mediaPickerInterface = object : MediaPickerInterface {
+                override fun pickExcel() {
+                    showPicker = false
+                    excelManager.launch()   // <-- this line is likely missing
+                }
+                override fun pickPdf() {
+                    showPicker = false
+                    pdfManager.launch()     // <-- and this one
+                }
+                override fun pickerImageCamera() {}
+                override fun pickVideoGallery() {}
+                override fun pickVideoCamera() {}
+                override fun pickImageGallery() {}
+                override fun dismissed() { showPicker = false }
+            }
+        )
+    }
 }
+
 @Composable
 fun socialLoginCard(
     icon: DrawableResource,

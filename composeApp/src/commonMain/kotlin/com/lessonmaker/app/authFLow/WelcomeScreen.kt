@@ -65,8 +65,6 @@ fun WelcomeScreen(newRouts: (String) -> Unit) {
         )
         {
 
-
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

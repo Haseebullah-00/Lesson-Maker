@@ -1,0 +1,55 @@
+package com.lessonmaker.app.shared.media.excel
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import platform.Foundation.NSURL
+import platform.UIKit.UIApplication
+import platform.UIKit.UIDocumentPickerDelegateProtocol
+import platform.UIKit.UIDocumentPickerMode
+import platform.UIKit.UIDocumentPickerViewController
+import platform.darwin.NSObject
+
+
+@Composable
+actual fun rememberGalleryManagerForExcel(onResult: (SharedExcel?) -> Unit): ExcelGalleryManager {
+    val delegate = remember {
+        object : NSObject(), UIDocumentPickerDelegateProtocol {
+            override fun documentPicker(
+                controller: UIDocumentPickerViewController,
+                didPickDocumentsAtURLs: List<*>
+            ) {
+                val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
+                onResult(url?.let { SharedExcel(it) })
+            }
+
+            override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
+                onResult(null)
+            }
+        }
+    }
+
+    return remember {
+        ExcelGalleryManager {
+            val picker = UIDocumentPickerViewController(
+                documentTypes = listOf(
+                    "org.openxmlformats.spreadsheetml.sheet", // .xlsx
+                    "com.microsoft.excel.xls",                // .xls
+                    "public.comma-separated-values-text"      // .csv
+                ),
+                inMode = UIDocumentPickerMode.UIDocumentPickerModeImport
+            )
+            picker.delegate = delegate
+            picker.allowsMultipleSelection = false
+
+            UIApplication.sharedApplication.keyWindow?.rootViewController?.presentViewController(
+                picker, true, null
+            )
+        }
+    }
+}
+
+actual class ExcelGalleryManager actual constructor(
+    private val onLaunch: () -> Unit
+) {
+    actual fun launch() = onLaunch()
+}

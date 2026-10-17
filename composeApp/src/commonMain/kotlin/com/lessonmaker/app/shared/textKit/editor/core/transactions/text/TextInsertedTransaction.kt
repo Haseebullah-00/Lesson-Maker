@@ -1,0 +1,504 @@
+package com.lessonmaker.app.shared.textkit.editor.core.transactions.text
+
+import androidx.compose.ui.text.TextRange
+import com.lessonmaker.app.shared.textkit.editor.components.TextEditorListItem
+import com.lessonmaker.app.shared.textkit.editor.core.TextKitEditorManager
+import com.lessonmaker.app.shared.textkit.editor.core.converters.ListsConverter
+import com.lessonmaker.app.shared.textkit.editor.core.converters.models.PositionalListItem
+import com.lessonmaker.app.shared.textkit.editor.core.converters.utils.PositionalListItemUtils
+import com.lessonmaker.app.shared.textkit.editor.core.converters.utils.createTransactions
+import com.lessonmaker.app.shared.textkit.editor.core.converters.utils.flatten
+import com.lessonmaker.app.shared.textkit.editor.core.models.MultiPieceParagraph
+import com.lessonmaker.app.shared.textkit.editor.core.models.PieceParagraph
+import com.lessonmaker.app.shared.textkit.editor.core.models.TextEditorModel
+import com.lessonmaker.app.shared.textkit.editor.core.parser.LinkMark
+import com.lessonmaker.app.shared.textkit.editor.core.parser.Mark
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.models.TextDecoratorModel
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.models.TextDecoratorModel.Companion.createDecoratorString
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.models.TextDecoratorModel.Companion.toLevel
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.models.TextDecoratorModel.Companion.toNewDecoratorModel
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.lists.models.TextEditorDecoratorTransactionType
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.lists.models.TextEditorListItemTransaction
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.models.TextEditorAction
+import com.lessonmaker.app.shared.textkit.editor.core.validator.ListItemValidator
+import com.lessonmaker.app.shared.textkit.editor.core.validator.TextInputResult
+
+import com.lessonmaker.app.shared.textkit.editor.utils.isLineBreak
+import com.lessonmaker.app.shared.textkit.editor.utils.replaceLineBreakWith
+
+internal object TextInsertedTransaction {
+
+    /**
+     * The quote attribute inserted text inherits (#126): the blockquote decorator of the paragraph
+     * the insertion lands in, resolved forward at boundaries (typing at the start of the paragraph
+     * AFTER a quote does not inherit it), falling back to the last paragraph at the document end.
+     */
+    private fun MultiPieceParagraph.quoteDecoratorAt(offset: Int): TextDecoratorModel.BlockquoteDecorator? {
+        val paragraph = paragraphs.firstOrNull { offset < it.endOffset + it.endPiece.length }
+            ?: paragraphs.lastOrNull()
+            ?: return null
+        return paragraph.pieces.firstNotNullOfOrNull { it.piece.decorator as? TextDecoratorModel.BlockquoteDecorator }
+    }
+
+    internal fun addText(
+        lines: MultiPieceParagraph,
+        actionModel: TextEditorAction.TextAdded,
+        manager: TextKitEditorManager
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        // The decorator is presentation-only and atomic, so an insert whose offset falls in a
+        // decorator region must not splice into it (issue #69; the replace path got the same rule
+        // in #58): text lands at the item's content start, a break splits at the item boundary, and
+        // a break exactly before the item opens a plain line above it, leaving the item untouched.
+        val decoratedParagraph = lines.listItemWithDecoratorAt(actionModel.offset)
+        if (decoratedParagraph != null) {
+            if (actionModel.text.isLineBreak() && actionModel.offset == decoratedParagraph.startOffset) {
+                return insertTextInParagraph(actionModel, getMarksForInsertion(actionModel.marks, filterLinkMarks = true))
+            }
+            val contentStart = decoratedParagraph.startOffset + decoratedParagraph.startPiece.length
+            if (actionModel.offset < contentStart) {
+                // A numbered item's established behaviour is to block text typed on its decorator
+                // (see preventTextInsertionOnDecorator); keep that, clamp everything else.
+                if (!actionModel.text.isLineBreak() &&
+                    decoratedParagraph.startPiece.decorator is TextDecoratorModel.NumberDecoratorModel
+                ) {
+                    return preventTextInsertionOnDecorator(decoratedParagraph)
+                }
+                // Re-dispatch with the selection rebuilt at the clamped offset too, so downstream
+                // piecesInSelectedRange routing sees the content position, not the decorator.
+                return addText(
+                    lines.atOffset(contentStart),
+                    actionModel.copy(offset = contentStart, selection = TextRange(contentStart + actionModel.text.length)),
+                    manager
+                )
+            }
+        }
+
+        val currentParagraph = lines.paragraphsInSelectedRange.firstOrNull()
+        val isAtEndOfParagraph = currentParagraph?.isAtEndOfParagraph(actionModel.offset, actionModel.offset) ?: false
+        val updatedSelectedParagraph = if (isAtEndOfParagraph) {
+            lines.paragraphs.firstOrNull { it.findPiecesInRange(actionModel.offset, actionModel.offset).isNotEmpty() }
+        } else {
+            currentParagraph
+        }
+
+        val isAddingTextToListItem = updatedSelectedParagraph?.isListItem ?: false
+
+        return if (updatedSelectedParagraph != null && isAddingTextToListItem) {
+            insertTextInListParagraph(updatedSelectedParagraph, lines, actionModel)
+        } else {
+            insertTextInParagraph(updatedSelectedParagraph, lines, actionModel, manager)
+        }
+    }
+
+    /** The list item whose decorator region contains [offset], or `null` when there is none. */
+    private fun MultiPieceParagraph.listItemWithDecoratorAt(offset: Int): PieceParagraph? =
+        paragraphs.firstOrNull { paragraph ->
+            paragraph.isListItem &&
+                offset >= paragraph.startOffset &&
+                offset < paragraph.startOffset + paragraph.startPiece.length
+        }
+
+    /** The same paragraphs with the collapsed selection moved to [offset], mirroring how the caller
+     *  builds line content for a collapsed insert. */
+    private fun MultiPieceParagraph.atOffset(offset: Int): MultiPieceParagraph =
+        MultiPieceParagraph(
+            paragraphs = paragraphs.map { it.copy(start = offset, end = offset) },
+            start = offset,
+            end = offset,
+        )
+
+    private fun getMarks(preselectedMarks: Set<Mark>, previousItemMarks: Set<Mark>, isNewParagraph: Boolean): Set<Mark> {
+        return if (isNewParagraph) {
+            preselectedMarks.plus(previousItemMarks)
+        } else {
+            preselectedMarks
+        }
+    }
+
+    private fun insertTextInListParagraph(
+        paragraph: PieceParagraph,
+        lines: MultiPieceParagraph,
+        actionModel: TextEditorAction.TextAdded
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        val listParagraphs = lines.paragraphs.filter { it.isListItem }
+        val filteredParagraphs = MultiPieceParagraph(
+            listParagraphs,
+            actionModel.selection.start,
+            actionModel.selection.end
+        )
+
+        val isLineBreak = actionModel.text.isLineBreak()
+
+        return when {
+            isLineBreak -> addLineBreakToListItem(paragraph, filteredParagraphs, actionModel)
+            paragraph.text.isEmpty() -> insertTextInParagraph(
+                actionModel,
+                getMarksForInsertion(actionModel.marks, filterLinkMarks = true)
+            )
+
+            else -> {
+                when (paragraph.piecesInSelectedRange.firstOrNull()?.piece?.decorator) {
+                    is TextDecoratorModel.NumberDecoratorModel -> preventTextInsertionOnDecorator(paragraph)
+                    is TextDecoratorModel.TaskDecoratorModel -> insertTextOnTaskListDecorator(paragraph, actionModel)
+                    else -> insertTextInParagraph(actionModel, getMarksForInsertion(actionModel.marks))
+                }
+            }
+        }
+    }
+
+    private fun insertTextInParagraph(
+        paragraph: PieceParagraph?,
+        lines: MultiPieceParagraph,
+        actionModel: TextEditorAction.TextAdded,
+        manager: TextKitEditorManager
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        return when {
+            paragraph == null -> insertTextInParagraph(
+                actionModel,
+                getMarksForInsertion(actionModel.marks, filterLinkMarks = true),
+                lines.quoteDecoratorAt(actionModel.offset),
+            )
+
+            paragraph.text.isLineBreak() && actionModel.text.isLineBreak() -> insertTextInParagraph(
+                actionModel,
+                getMarksForInsertion(actionModel.marks, filterLinkMarks = true),
+                lines.quoteDecoratorAt(actionModel.offset),
+            )
+
+            else -> insertTextInNonEmptyParagraph(paragraph, lines, actionModel, manager)
+        }
+    }
+
+    private fun insertTextInNonEmptyParagraph(
+        paragraph: PieceParagraph,
+        lines: MultiPieceParagraph,
+        actionModel: TextEditorAction.TextAdded,
+        manager: TextKitEditorManager
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        // We need to validate if the text added matches with the regex
+        val input = matchesListItemPattern(paragraph, actionModel)
+        // It matches the regex, so we need to insert the decorator, otherwise just add the text
+        return if (input != null) {
+            // The caller's window is built around the collapsed caret, and a caret on an EMPTY
+            // line resolves backward — the paragraph being converted lands in the window's
+            // single-next-paragraph fallback slot and the list items after it are cut off, so the
+            // renumber pass never saw them (issue #138). Fetch the neighborhood from the converted
+            // paragraph's own span instead: it selects the paragraph itself, so the window carries
+            // the full list context on both sides.
+            val reorderLines = manager.transaction.getLineContentWithNeighborParagraphs(
+                paragraph.startOffset,
+                paragraph.endOffset + paragraph.endPiece.length,
+            )
+            val insertedDecorator = input.model.piece?.decorator
+            val leveledNumberedDecorator = if (insertedDecorator is TextDecoratorModel.NumberDecoratorModel) {
+                val listLevel = numberedListLevelAdjacentTo(reorderLines, paragraph)
+                insertedDecorator.copyValue(level = listLevel)
+            } else {
+                null
+            }
+            val reorderedItems = if (leveledNumberedDecorator != null) {
+                TextTransactionsUtils.numberedListReorderAfterPatternInsert(reorderLines, paragraph, leveledNumberedDecorator)
+            } else {
+                emptyList()
+            }
+            val reorderedCurrent = reorderedItems.find { it.offsetInDocument == paragraph.startOffset }
+            val updateInput = when {
+                reorderedCurrent != null && reorderedCurrent.modified -> {
+                    val decorator = reorderedCurrent.newRichPiece.decorator
+                    TextInputResult(
+                        TextEditorModel.create(
+                            text = decorator.createDecoratorString(),
+                            decorator = decorator,
+                        )
+                    )
+                }
+
+                leveledNumberedDecorator != null -> {
+                    TextInputResult(
+                        TextEditorModel.create(
+                            text = leveledNumberedDecorator.createDecoratorString(),
+                            decorator = leveledNumberedDecorator,
+                        )
+                    )
+                }
+
+                else -> input
+            }
+            val updateTransaction = TextDecoratorTransaction.getUpdateDecoratorTransaction(updateInput, paragraph, actionModel)
+            val transactions = mutableListOf(updateTransaction)
+            if (reorderedItems.isNotEmpty()) {
+                transactions.addAll(
+                    reorderedItems.createTransactions().filter { it.offsetInDocument != paragraph.startOffset }
+                )
+            }
+            val modelLength = when (val type = updateTransaction.type) {
+                is TextEditorDecoratorTransactionType.Delete -> 0
+                is TextEditorDecoratorTransactionType.Insert -> type.model.text.length
+                is TextEditorDecoratorTransactionType.Update -> type.model.text.length
+            }
+            Pair(
+                TextRange(paragraph.startOffset + modelLength),
+                transactions
+            )
+        } else {
+            val finalMarks = getMarksForInsertion(actionModel.marks)
+            insertTextInParagraph(actionModel, finalMarks, lines.quoteDecoratorAt(actionModel.offset))
+        }
+    }
+
+    private fun numberedListLevelAdjacentTo(
+        lines: MultiPieceParagraph,
+        paragraph: PieceParagraph,
+    ): Int {
+        val paragraphs = lines.paragraphs
+        val currentIndex = paragraphs.indexOfFirst { it.startOffset == paragraph.startOffset }
+        if (currentIndex < 0) return 1
+
+        fun numberedLevelSteppingFrom(step: Int): Int? {
+            var index = currentIndex + step
+            while (index in paragraphs.indices) {
+                val neighbor = paragraphs[index]
+                when {
+                    isNumberedListParagraph(neighbor) ->
+                        return neighbor.startPiece.decorator.toLevel()
+
+                    neighbor.isListItem -> return null
+                    else -> index += step
+                }
+            }
+            return null
+        }
+
+        return numberedLevelSteppingFrom(-1) ?: numberedLevelSteppingFrom(1) ?: 1
+    }
+
+    private fun isNumberedListParagraph(paragraph: PieceParagraph): Boolean =
+        paragraph.isListItem && paragraph.paragraphType == TextEditorListItem.NumberedList
+
+    private fun insertTextInParagraph(
+        actionModel: TextEditorAction.TextAdded,
+        marks: Set<Mark>,
+        quote: TextDecoratorModel.BlockquoteDecorator? = null,
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        val model = TextEditorModel.create(text = actionModel.text, marks = marks, decorator = quote)
+        val transaction = TextTransactionsUtils.insertTransaction(actionModel.offset, model)
+        val rangeOffset = actionModel.offset + actionModel.text.length
+
+        return Pair(TextRange(rangeOffset), listOf(transaction))
+    }
+
+    private fun addLineBreakToListItem(
+        currentParagraph: PieceParagraph,
+        lines: MultiPieceParagraph,
+        actionModel: TextEditorAction.TextAdded
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        val listItems = ListsConverter.fromPieceMultiParagraph(lines)
+        val currentDecorator = currentParagraph.startPiece.decorator
+        val currentIndex = PositionalListItemUtils.findItemByOffset(listItems, currentParagraph.startOffset)?.index ?: 0
+
+        return if (currentParagraph.text.isEmpty() || currentParagraph.text.isLineBreak()) {
+            addLineBreakOnEmptyListItem(currentParagraph, currentIndex, lines, currentDecorator, actionModel)
+        } else {
+            addLineBreakOnNonEmptyListItem(currentIndex, listItems, currentDecorator, actionModel)
+        }
+    }
+
+    /**
+     * This function adds a line break on a paragraph that only has a decorator
+     *
+     * When adding a line break over a paragraph that only contains a decorator,
+     * we should not insert the line break, but rather remove the decorator from the current paragraph.
+     *
+     * @return A Pair with the new cursor position and a list of transactions [TextEditorListItemTransaction].
+     */
+    private fun addLineBreakOnEmptyListItem(
+        currentParagraph: PieceParagraph,
+        currentIndex: Int,
+        lines: MultiPieceParagraph,
+        currentDecorator: TextDecoratorModel?,
+        actionModel: TextEditorAction.TextAdded
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        val transactions = mutableListOf<TextEditorListItemTransaction>()
+
+        val positionalListItems = PositionalListItemUtils.decreaseLevels(lines, listOf(currentIndex))
+
+        val flattenItems = when (currentDecorator) {
+            is TextDecoratorModel.NumberDecoratorModel -> PositionalListItemUtils.reorderItems(positionalListItems)
+            is TextDecoratorModel.BulletDecoratorModel -> PositionalListItemUtils.reorderItems(positionalListItems, coerceLevel = false)
+
+            // createTransactions scans the list it is handed, not the trees inside it: a nested
+            // item's demotion is invisible unless the tree is flattened first. The two branches
+            // above only survive because reorderItems flattens as a side effect — a nested TASK
+            // item demoted here was silently dropped, turning Enter into a no-op (issue #133).
+            else -> positionalListItems.flatten()
+        }
+        transactions.addAll(flattenItems.createTransactions())
+
+        return Pair(TextRange(caretAfterEmptyItemBreak(currentParagraph, transactions, actionModel)), transactions)
+    }
+
+    /**
+     * The caret after Enter on an empty list item, derived from the transactions that were
+     * actually emitted rather than from the demotion the caller assumed (issue #133; the previous
+     * arithmetic subtracted a fixed tab-pair width for any nested item — when the transactions did nothing
+     * the caret stepped back INTO the marker, when they deleted the marker whole it landed one
+     * character short of the emptied line, and when they removed more than assumed it went past
+     * the document end — #131's clamp, seed 46382). The caret belongs at the item's content
+     * start: its old position at [TextEditorAction.TextAdded.offset], shifted by exactly what the
+     * transactions change at or before the item's paragraph.
+     */
+    private fun caretAfterEmptyItemBreak(
+        currentParagraph: PieceParagraph,
+        transactions: List<TextEditorListItemTransaction>,
+        actionModel: TextEditorAction.TextAdded
+    ): Int {
+        val delta = transactions
+            .filter { it.offsetInDocument <= currentParagraph.startOffset }
+            .sumOf { transaction ->
+                when (val type = transaction.type) {
+                    is TextEditorDecoratorTransactionType.Update -> type.model.text.length - type.length
+                    is TextEditorDecoratorTransactionType.Delete -> -type.length
+                    is TextEditorDecoratorTransactionType.Insert -> type.model.text.length
+                }
+            }
+        return (actionModel.offset + delta).coerceAtLeast(currentParagraph.startOffset)
+    }
+
+    /**
+     * This function adds a line break on a non empty list item.
+     * We need to create a decorator that will appear in the next paragraph before the line break and then reorder the next items if needed.
+     *
+     * @return A Pair with the new cursor position and a list of transactions [TextEditorListItemTransaction].
+     */
+    private fun addLineBreakOnNonEmptyListItem(
+        currentIndex: Int,
+        listItems: List<PositionalListItem>,
+        currentDecorator: TextDecoratorModel?,
+        actionModel: TextEditorAction.TextAdded
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        val transactions = mutableListOf<TextEditorListItemTransaction>()
+        val currentDecoratorCount = (currentDecorator?.toCount() ?: 1).plus(1)
+        val text = currentDecorator.toNewDecoratorModel(currentDecoratorCount).createDecoratorString()
+        val newDecoratorMarksModel =
+            TextEditorModel.create(text = text, decorator = currentDecorator.toNewDecoratorModel(currentDecoratorCount))
+        val textMarksModel = TextEditorModel.create(text = actionModel.text, marks = actionModel.marks)
+
+        val nextListItems = PositionalListItemUtils.findSameLevelItems(listItems.flatten(), currentIndex)
+        val nextListItemsTransactions = updateNextParagraphs(nextListItems)
+
+        transactions.addAll(nextListItemsTransactions)
+        transactions.add(TextTransactionsUtils.insertTransaction(actionModel.offset, newDecoratorMarksModel))
+        transactions.add(TextTransactionsUtils.insertTransaction(actionModel.offset, textMarksModel))
+
+        val length = currentDecorator.createDecoratorString().length
+        val newRange = TextRange(actionModel.offset + actionModel.text.length + length)
+
+        return Pair(newRange, transactions)
+    }
+
+    private fun preventTextInsertionOnDecorator(paragraph: PieceParagraph): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        // The caret lands at the item's content start — not one past it. On an empty item that
+        // overshoots the document, and a multiline insert replays its next segment at the returned
+        // caret, so an out-of-range caret becomes an out-of-range insert.
+        val offset = paragraph.startOffset + paragraph.startPiece.length
+        return Pair(TextRange(offset), emptyList())
+    }
+
+    private fun getMarksForInsertion(marks: Set<Mark>, filterLinkMarks: Boolean = false): Set<Mark> {
+        return if (filterLinkMarks) {
+            marks.filterNot { it is LinkMark }.toSet()
+        } else {
+            marks
+        }
+    }
+
+    /**
+     * Validates if the input text matches the decorators regex defined in [ListItemValidator].
+     * If it matches the expected regex it returns a [TextInputResult] with the new decorator marks model otherwise null
+     */
+    private fun matchesListItemPattern(currentParagraph: PieceParagraph, actionModel: TextEditorAction.TextAdded): TextInputResult? {
+        val paragraphText = if (currentParagraph.startPiece.decorator is TextDecoratorModel.TaskDecoratorModel) {
+            currentParagraph.startText
+        } else {
+            currentParagraph.text
+        }
+
+        val startOfsset = currentParagraph.startOffset
+        val insertOffset = actionModel.offset - startOfsset
+        val finalText = buildString {
+            append(paragraphText, 0, insertOffset)
+            append(actionModel.text)
+            append(paragraphText, insertOffset, paragraphText.length)
+        }.replaceLineBreakWith("")
+
+        return if (currentParagraph.startPiece.decorator == null || currentParagraph.startPiece.decorator is TextDecoratorModel.TaskDecoratorModel) {
+            ListItemValidator.validateInput(finalText)
+        } else {
+            null
+        }
+    }
+
+    private fun updateNextParagraphs(paragraphs: List<PositionalListItem>): List<TextEditorListItemTransaction> {
+        return paragraphs
+            .filter { it.type == TextEditorListItem.NumberedList }
+            .map {
+                val count = (it.richPiece.decorator?.toCount() ?: 1) + 1
+                val newDecorator = it.richPiece.decorator.toNewDecoratorModel(count)
+                val text = newDecorator.createDecoratorString()
+                val model = TextEditorModel.create(text = text, decorator = newDecorator)
+                val type = TextEditorDecoratorTransactionType.Update(model, it.richPiece.length)
+                TextEditorListItemTransaction(it.offsetInDocument, type)
+            }
+    }
+
+    /**
+     * This function insert text on a decorator of type task
+     *
+     * There are 2 possible scenarios, the first one, when we have a paragraph like this:
+     * -[] Hello world
+     * This is a representation for a un unchecked task decorator, so the user can convert this to a checked task like this:
+     * -[x] Hello world
+     * In this case we need to replace the uncheck decorator with a checked decorator due to a match with a regex decorator.
+     *
+     * The other scenarios is when we have a task decorator checked like the following:
+     * -[x] Hello world
+     * and the user insert any character inside the decorator like this:
+     * - [xp] Hello world
+     * In this case we need to replace the decorator with a simple text due to the new text doesn't match decorators regex.
+     *
+     * @return A Pair with the new cursor position and a list of transactions [TextEditorListItemTransaction].
+     */
+    private fun insertTextOnTaskListDecorator(
+        paragraph: PieceParagraph,
+        actionModel: TextEditorAction.TextAdded
+    ): Pair<TextRange, List<TextEditorListItemTransaction>> {
+        val listItemValidationResult = matchesListItemPattern(paragraph, actionModel)
+
+        return if (listItemValidationResult != null) {
+            val transaction = TextTransactionsUtils.updateTransaction(
+                paragraph.startOffset,
+                listItemValidationResult.model,
+                paragraph.startPiece.length
+            )
+            val length = listItemValidationResult.model.text.length
+            Pair(TextRange(paragraph.startOffset + length), listOf(transaction))
+        } else {
+            // Insert decorator content as text plus inserted text
+            val cursorPosition = actionModel.offset - paragraph.startOffset
+            val finalText = buildString {
+                append(paragraph.startText, 0, cursorPosition)
+                append(actionModel.text)
+                append(paragraph.startText, cursorPosition, paragraph.startText.length)
+            }
+
+            val newModel = TextEditorModel.create(text = finalText)
+            val updateTransaction = TextTransactionsUtils.updateTransaction(
+                paragraph.startOffset,
+                newModel,
+                paragraph.startPiece.length
+            )
+
+            Pair(TextRange(paragraph.startOffset + finalText.length), listOf(updateTransaction))
+        }
+    }
+}

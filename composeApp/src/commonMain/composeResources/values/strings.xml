@@ -1,0 +1,40 @@
+<resources>
+
+    <string name="bold_text">Bold</string>
+    <string name="italic_text">Italic</string>
+    <string name="underline_text">Underline</string>
+    <string name="strikethrough_text">Strikethrough</string>
+    <string name="highlight_text">Highlight</string>
+    <string name="link_text">Link</string>
+    <string name="image_text">Image</string>
+    <string name="table_text">Table</string>
+    <string name="document_text">Document</string>
+    <string name="ordered_list_text">Ordered list</string>
+    <string name="bulleted_list_text">Bulleted list</string>
+    <string name="align_text">Align</string>
+    <string name="undo_text">Undo</string>
+    <string name="redo_text">Redo</string>
+    <string name="text_color_text">Text color</string>
+    <string name="type_text">Type...</string>
+    <string name="close_text">Close</string>
+    <string name="text_label">Text</string>
+    <string name="url_label">Url</string>
+    <string name="edit_label">Edit</string>
+    <string name="remove_label">Remove</string>
+    <string name="open_label">Open</string>
+    <string name="blockquote_text">Quote</string>
+    <string name="left_align_text">Left align</string>
+    <string name="center_align_text">Center align</string>
+    <string name="right_align_text">Right align</string>
+    <string name="justify_align_text">Justify align</string>
+
+    <string name="table_merge_cells_text">Merge cells</string>
+    <string name="table_split_cell_text">Split cell</string>
+    <string name="table_toggle_header_text">Toggle header</string>
+    <string name="table_delete_selection_text">Delete selection</string>
+    <string name="table_clear_selection_text">Clear selection</string>
+    <string name="table_add_text">Add</string>
+    <string name="table_selection_hint_text">Tap the edges to select rows or columns; use the icons to merge, split, or delete.</string>
+    <string name="table_synced_json_text">Synced JSON</string>
+
+</resources>

@@ -75,6 +75,7 @@ import lessonmaker.composeapp.generated.resources.welcome_screen_logo
 
 @Composable
 fun WelcomeScreen(newRouts: (String) -> Unit) {
+    ////
 
     Box(
         modifier = Modifier

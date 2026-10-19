@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.lessonmaker.app.base.ShareViewModelInterface
 import com.lessonmaker.app.base.SharedBaseViewModel
+import com.lessonmaker.app.common.dialogue.UiState
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
 import com.lessonmaker.app.extensionFunctions.checkForSuccess
@@ -32,8 +33,7 @@ class AllBooksVM(
     private val _books =
         MutableStateFlow<List<Book>>(emptyList())
 
-    val books: StateFlow<List<Book>> =
-        _books.asStateFlow()
+    val books: StateFlow<List<Book>> = _books.asStateFlow()
 
     fun getAllBooks() {
         if (isLoading) return
@@ -42,14 +42,18 @@ class AllBooksVM(
             isLoading = true
             showEmptyScreen = false
 
+
+            commonLoading.apiCall = UiState.Loading
             try {
                 val response = apiService
                     .getAllBooks()
                     .getOnlySuccess()
-                    ?: return@launch
+
+
+                commonLoading.apiCall = UiState.Success(response!!)
 
                 if (response.status.checkForSuccess()) {
-                    val books = response.data ?: emptyList()
+                    val books = response.data?:emptyList()
 
                     _books.value = books
                     showEmptyScreen = books.isEmpty()

@@ -41,8 +41,6 @@ class AllBooksVM(
         viewModelScope.launch {
             isLoading = true
             showEmptyScreen = false
-
-
             commonLoading.apiCall = UiState.Loading
             try {
                 val response = apiService

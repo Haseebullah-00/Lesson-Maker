@@ -8,8 +8,12 @@ sealed class Screen(val route: String) {
 
     @Serializable
     data object LoginScreenFlow: Screen("LoginScreenFlow")
+
+    @Serializable
+    data object DataCellLoginScreenFlow: Screen("DataCellLoginScreenFlow")
     @Serializable
     data object WelcomeScreen: Screen("WelcomeScreen")
+
     @Serializable
     data object AgeAskingScreen: Screen("AgeAskingScreen")
 

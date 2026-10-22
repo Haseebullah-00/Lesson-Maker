@@ -9,6 +9,7 @@ import com.lessonmaker.app.authFLow.AgeAskingScreen
 import com.lessonmaker.app.authFLow.LoginScreenFlow
 import com.lessonmaker.app.authFLow.RegisterFLowScreen
 import com.lessonmaker.app.authFLow.WelcomeScreen
+import com.lessonmaker.app.authFLow.dataCell.DataCellLoginScreenFlow
 import com.lessonmaker.app.base.BaseDialogInterface
 import com.lessonmaker.app.base.HandleDialogs
 import com.lessonmaker.app.di.CommonLoading
@@ -103,6 +104,20 @@ fun AfterKoinInject(destination: String? = null) {
         composable(route = Screen.LoginScreenFlow.route) { backStackEntry ->
             localDestination = null
             LoginScreenFlow {
+                when (it) {
+                    Screen.POPBackStack.route -> navController.popBackStack()
+                    Screen.DashboardScreen.route -> {
+                        navController.clearAllAndMoveToDashboard()
+                    }
+
+                    else -> navController.singleTopNavigation(it)
+                }
+            }
+        }
+
+        composable(route = Screen.DataCellLoginScreenFlow.route) { backStackEntry ->
+            localDestination = null
+            DataCellLoginScreenFlow{
                 when (it) {
                     Screen.POPBackStack.route -> navController.popBackStack()
                     Screen.DashboardScreen.route -> {

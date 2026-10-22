@@ -6,6 +6,8 @@ import com.russhwolf.settings.Settings
 import com.lessonmaker.app.mainScreen.DashboardViewModel
 import com.lessonmaker.app.network.ApiService
 import com.lessonmaker.app.network.provideHttpClient
+import com.picket.app.authFlow.screen.login.DataCellLoginVm
+import com.picket.app.authFlow.screen.login.LoginVm
 import org.koin.core.KoinApplication
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -32,6 +34,8 @@ val appModule = module {
 //    viewModelOf(::CMSViewModel)
 //    viewModelOf(::OTPVerifyViewModelSingUp)
   //  viewModelOf(::RegisterViewModel)
+    viewModelOf(::LoginVm)
+    viewModelOf(::DataCellLoginVm)
     viewModelOf(::AllBooksVM)
 
 }

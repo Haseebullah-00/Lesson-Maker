@@ -2,6 +2,7 @@ package com.lessonmaker.app
 
 interface Platform {
     val name: String
+    val isIOS:Boolean
 }
 
 expect fun getPlatform(): Platform

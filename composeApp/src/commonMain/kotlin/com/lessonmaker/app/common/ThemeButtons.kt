@@ -36,6 +36,7 @@ import com.lessonmaker.app.theme.TextSize16
 import com.lessonmaker.app.theme.TextSize17
 import com.lessonmaker.app.theme.TextSize18
 import com.lessonmaker.app.theme.bold
+import com.lessonmaker.app.theme.fieldCursor
 import com.lessonmaker.app.theme.secondaryColor
 import com.lessonmaker.app.theme.semiBold
 
@@ -121,6 +122,36 @@ fun MainButton(
     }
 
 
+}
+
+
+@Composable
+fun MainButtonNew(
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .height(52.dp),
+    heading: String = "Next",
+    clicked: (Boolean) -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+
+            .background(fieldCursor)
+            .clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null
+            ) {
+                clicked(true)
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = heading,
+            color = White,
+            style = TextSize16().bold()
+        )
+    }
 }
 
 @Composable

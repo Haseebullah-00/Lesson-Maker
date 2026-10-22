@@ -292,94 +292,220 @@ fun LoadingDialog() {
 }
 
 
+//@OptIn(ExperimentalResourceApi::class)
+//@Composable
+//fun MediaSourcePicker(type: String, mediaPickerInterface: MediaPickerInterface) {
+//    Dialog(
+//        onDismissRequest = {
+//            mediaPickerInterface.dismissed()
+//        },
+//        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+//    ) {
+//        MainTransparentBox(
+//            backgroundColor = White
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .padding(vertical = 20.dp, horizontal = 10.dp).background(White),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//
+//                Text(
+//                    text = "Select an Image Source",
+//                    style = TextSize20(),
+//                    color = Black,
+//                    maxLines = 5,
+//                    textAlign = TextAlign.Center
+//                )
+//                Spacer(modifier = Modifier.height(20.dp))
+//                SinglePickerOption(
+//                    title = "Camera",
+//                    icon = Res.drawable.ic_camera
+//                ) {
+//                    mediaPickerInterface.pickerImageCamera()
+//                }
+//                Divider(
+//                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+//                    thickness = 1.dp,
+//                    color = Black
+//                )
+//                SinglePickerOption(
+//                    title = "Gallery",
+//                    icon = Res.drawable.ic_gallery
+//                ) {
+//                    mediaPickerInterface.pickImageGallery()
+//                }
+//
+//                if (type.contains("mp4")) {
+//                    Divider(
+//                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+//                        thickness = 1.dp,
+//                        color = Black
+//                    )
+//                    SinglePickerOption(
+//                        title = "Video from Camera",
+//                        icon = Res.drawable.ic_camera
+//                    ) {
+//                        mediaPickerInterface.pickVideoCamera()
+//                    }
+//
+//                    Divider(
+//                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+//                        thickness = 1.dp,
+//                        color = Black
+//                    )
+//                    SinglePickerOption(
+//                        title = "Video from Gallery",
+//                        icon = Res.drawable.ic_gallery
+//                    ) {
+//                        mediaPickerInterface.pickVideoGallery()
+//                    }
+//                }
+//
+//                if (type.contains("pdf")) {
+//                    Divider(
+//                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+//                        thickness = 1.dp,
+//                        color = Black
+//                    )
+//                    SinglePickerOption(
+//                        title = "PDF file",
+//                        icon = Res.drawable.ic_gallery
+//                    ) {
+//                        mediaPickerInterface.pickPdf()
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
+
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun MediaSourcePicker(type: String, mediaPickerInterface: MediaPickerInterface) {
+fun MediaSourcePicker(
+    type: String,
+    mediaPickerInterface: MediaPickerInterface
+) {
+    val mediaType = type.lowercase()
+
     Dialog(
         onDismissRequest = {
             mediaPickerInterface.dismissed()
         },
-        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
     ) {
         MainTransparentBox(
             backgroundColor = White
         ) {
             Column(
                 modifier = Modifier
-                    .padding(vertical = 20.dp, horizontal = 10.dp).background(White),
+                    .padding(vertical = 20.dp, horizontal = 10.dp)
+                    .background(White),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Text(
-                    text = "Select an Image Source",
+                    text = when {
+                        mediaType == "excel" -> "Select an Excel File"
+                        mediaType == "pdf" ||
+                                mediaType == "document" -> "Select a PDF File"
+                        mediaType.contains("mp4") ||
+                                mediaType == "video" -> "Select a Video Source"
+                        else -> "Select an Image Source"
+                    },
                     style = TextSize20(),
                     color = Black,
                     maxLines = 5,
                     textAlign = TextAlign.Center
                 )
+
                 Spacer(modifier = Modifier.height(20.dp))
-                SinglePickerOption(
-                    title = "Camera",
-                    icon = Res.drawable.ic_camera
-                ) {
-                    mediaPickerInterface.pickerImageCamera()
-                }
-                Divider(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                    thickness = 1.dp,
-                    color = Black
-                )
-                SinglePickerOption(
-                    title = "Gallery",
-                    icon = Res.drawable.ic_gallery
-                ) {
-                    mediaPickerInterface.pickImageGallery()
-                }
 
-                if (type.contains("mp4")) {
-                    Divider(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        thickness = 1.dp,
-                        color = Black
-                    )
-                    SinglePickerOption(
-                        title = "Video from Camera",
-                        icon = Res.drawable.ic_camera
-                    ) {
-                        mediaPickerInterface.pickVideoCamera()
+                when {
+                    // EXCEL FILE
+                    mediaType == "excel" -> {
+                        SinglePickerOption(
+                            title = "Excel File",
+                            icon = Res.drawable.ic_gallery
+                        ) {
+                            mediaPickerInterface.pickExcel()
+                        }
                     }
 
-                    Divider(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        thickness = 1.dp,
-                        color = Black
-                    )
-                    SinglePickerOption(
-                        title = "Video from Gallery",
-                        icon = Res.drawable.ic_gallery
-                    ) {
-                        mediaPickerInterface.pickVideoGallery()
+                    // PDF FILE
+                    mediaType == "pdf" ||
+                            mediaType == "document" -> {
+                        SinglePickerOption(
+                            title = "PDF File",
+                            icon = Res.drawable.ic_gallery
+                        ) {
+                            mediaPickerInterface.pickPdf()
+                        }
                     }
-                }
 
-                if (type.contains("pdf")) {
-                    Divider(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        thickness = 1.dp,
-                        color = Black
-                    )
-                    SinglePickerOption(
-                        title = "PDF file",
-                        icon = Res.drawable.ic_gallery
-                    ) {
-                        mediaPickerInterface.pickPdf()
+                    // VIDEO FILE
+                    mediaType.contains("mp4") ||
+                            mediaType == "video" -> {
+                        SinglePickerOption(
+                            title = "Video from Camera",
+                            icon = Res.drawable.ic_camera
+                        ) {
+                            mediaPickerInterface.pickVideoCamera()
+                        }
+
+                        Divider(
+                            modifier = Modifier.padding(
+                                horizontal = 10.dp,
+                                vertical = 5.dp
+                            ),
+                            thickness = 1.dp,
+                            color = Black
+                        )
+
+                        SinglePickerOption(
+                            title = "Video from Gallery",
+                            icon = Res.drawable.ic_gallery
+                        ) {
+                            mediaPickerInterface.pickVideoGallery()
+                        }
+                    }
+
+                    // IMAGE: CAMERA AND GALLERY
+                    else -> {
+                        SinglePickerOption(
+                            title = "Camera",
+                            icon = Res.drawable.ic_camera
+                        ) {
+                            mediaPickerInterface.pickerImageCamera()
+                        }
+
+                        Divider(
+                            modifier = Modifier.padding(
+                                horizontal = 10.dp,
+                                vertical = 5.dp
+                            ),
+                            thickness = 1.dp,
+                            color = Black
+                        )
+
+                        SinglePickerOption(
+                            title = "Gallery",
+                            icon = Res.drawable.ic_gallery
+                        ) {
+                            mediaPickerInterface.pickImageGallery()
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 interface MediaPickerInterface {
     fun pickerImageCamera()
@@ -388,6 +514,7 @@ interface MediaPickerInterface {
     fun pickImageGallery()
     fun dismissed()
     fun pickPdf()
+    fun pickExcel()
 }
 
 /*@Composable

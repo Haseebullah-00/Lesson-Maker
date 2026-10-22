@@ -16,33 +16,39 @@ import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.darwin.NSObject
 
 @Composable
-actual fun rememberCameraManager(onResult: (SharedImage?) -> Unit): CameraManager {
+actual fun rememberCameraManager(
+    allowsEditing: Boolean,
+    onResult: (SharedImage?) -> Unit
+): CameraManager {
+
     val imagePicker = UIImagePickerController()
-    val cameraDelegate = remember {
+
+    val delegate = remember {
         object : NSObject(), UIImagePickerControllerDelegateProtocol,
             UINavigationControllerDelegateProtocol {
+
             override fun imagePickerController(
-                picker: UIImagePickerController, didFinishPickingMediaWithInfo: Map<Any?, *>
+                picker: UIImagePickerController,
+                didFinishPickingMediaWithInfo: Map<Any?, *>
             ) {
                 val image =
-                    didFinishPickingMediaWithInfo.getValue(UIImagePickerControllerEditedImage) as? UIImage
-                        ?: didFinishPickingMediaWithInfo.getValue(
-                            UIImagePickerControllerOriginalImage
-                        ) as? UIImage
-                onResult.invoke(SharedImage(image))
+                    didFinishPickingMediaWithInfo[UIImagePickerControllerEditedImage] as? UIImage
+                        ?: didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage
+
+                onResult(SharedImage(image))
                 picker.dismissViewControllerAnimated(true, null)
             }
         }
     }
+
     return remember {
         CameraManager {
-            imagePicker.setSourceType(UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera)
-            imagePicker.setAllowsEditing(true)
-            imagePicker.setCameraCaptureMode(UIImagePickerControllerCameraCaptureMode.UIImagePickerControllerCameraCaptureModePhoto)
-            imagePicker.setDelegate(cameraDelegate)
-            UIApplication.sharedApplication.keyWindow?.rootViewController?.presentViewController(
-                imagePicker, true, null
-            )
+            imagePicker.sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
+            imagePicker.allowsEditing = allowsEditing
+            imagePicker.delegate = delegate
+
+            UIApplication.sharedApplication.keyWindow?.rootViewController
+                ?.presentViewController(imagePicker, true, null)
         }
     }
 }

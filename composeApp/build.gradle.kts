@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    kotlin("plugin.serialization") version "2.1.0"
+    kotlin("plugin.serialization") version "2.4.0"
 }
 // 1. Add global configuration for expect/actual suppression
 configure<KotlinMultiplatformExtension> {
@@ -44,13 +44,18 @@ kotlin {
     sourceSets {
         // ✅ Multiplatform (shared between Android & iOS)
         commonMain.dependencies {
+
+
+
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
-            implementation(compose.material3)
+            implementation("org.jetbrains.compose.material3:material3:1.11.0-alpha07")
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
+
 
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.serialization.json)
@@ -81,6 +86,7 @@ kotlin {
             implementation("media.kamel:kamel-image-default:1.0.3")
             implementation("org.jetbrains.compose.material:material-icons-core:1.7.3")
 
+            implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
             api("com.mohamedrejeb.calf:calf-ui:0.7.0")
         }
 

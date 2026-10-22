@@ -10,11 +10,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,323 +29,268 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil3.Image
 import com.lessonmaker.app.common.MainButton
+import com.lessonmaker.app.common.MainButtonNew
 import com.lessonmaker.app.common.MainGradientBg
 import com.lessonmaker.app.common.SimpleInputFieldWithError
+import com.lessonmaker.app.common.SimpleInputFieldWithErrorNew
 import com.lessonmaker.app.common.SimplePasswordInputField
-import com.lessonmaker.app.common.roundedShapeForInput
-import com.lessonmaker.app.mainScreen.DashboardScreen
+import com.lessonmaker.app.common.SimplePasswordInputFieldNew
+import com.lessonmaker.app.common.dialogue.MediaPickerInterface
+import com.lessonmaker.app.common.dialogue.MediaSourcePicker
+import com.lessonmaker.app.shared.media.excel.readSpreadsheet
+import com.lessonmaker.app.shared.media.excel.rememberGalleryManagerForExcel
+import com.lessonmaker.app.shared.media.pdf.rememberGalleryManagerForPdf
+import com.lessonmaker.app.theme.Black
 import com.lessonmaker.app.theme.Medium
-import com.lessonmaker.app.theme.PrimaryColor
 import com.lessonmaker.app.theme.Regular
+import com.lessonmaker.app.theme.TextSize13
 import com.lessonmaker.app.theme.TextSize14
 import com.lessonmaker.app.theme.TextSize16
 import com.lessonmaker.app.theme.TextSize18
+import com.lessonmaker.app.theme.TextSize28
 import com.lessonmaker.app.theme.TextSize32
 import com.lessonmaker.app.theme.White
-import com.lessonmaker.app.theme.backClr
+import com.lessonmaker.app.theme.bgColor
 import com.lessonmaker.app.theme.blurClr
 import com.lessonmaker.app.theme.bold
+import com.lessonmaker.app.theme.boldExtraBold
 import com.lessonmaker.app.theme.buttonBackClr
+import com.lessonmaker.app.theme.fieldBorder
+import com.lessonmaker.app.theme.fieldText
+import com.lessonmaker.app.theme.loginTabSelectionBg
+import com.lessonmaker.app.theme.loginTabUnselectedTxtClr
+import com.lessonmaker.app.theme.semiBold
+import com.picket.app.authFlow.screen.login.LoginVm
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import lessonmaker.composeapp.generated.resources.Res
 import lessonmaker.composeapp.generated.resources.apple
+import lessonmaker.composeapp.generated.resources.book_ic
 import lessonmaker.composeapp.generated.resources.check_box
 import lessonmaker.composeapp.generated.resources.google
 import lessonmaker.composeapp.generated.resources.ic_youtube
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+
+
 
 @Composable
 fun LoginScreenFlow(newRouts: (String) -> Unit)
 {
+    val loginVm= koinViewModel<LoginVm>()
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
+            .background(White)
 
-        )
-    {
-
-
-        ///
-
-        ////
-        MainGradientBg()
+    ){
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
+
+
         )
         {
-            Spacer(modifier = Modifier.height(70.dp))
-
-            Text(
-                text = "Welcome Back!",
-                color = White,
-                style = TextSize32().Medium()
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "Sign in to continue",
-                color = White,
-                style = TextSize18().Regular()
-            )
-            Spacer(modifier = Modifier.height(30.dp))
-            SimpleInputFieldWithError(
-                email,
-
-                onValueChange = { email = it },
-                hint = "Email Address",
-
-                )
-            Spacer(modifier = Modifier.height(10.dp))
-            SimplePasswordInputField(text = password,
-                hint = "Password",
-                enabled = true,
-                onValueChange = {password=it}
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            )
-            {
-                Row(
-                    modifier = Modifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                )
-                {
-                    Image(painter = painterResource(Res.drawable.check_box),
-                        contentDescription = "CHeck Box",
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            )
-                            {
-                            }
-                    )
-                    Text(
-                        text = "Remember me",
-                        color = White,
-                        style = TextSize16().Regular()
-                    )
-
-                }
-                Text(
-                    text = "Forgot password?",
-                    color = White,
-                    style = TextSize16().Medium(),
-                    modifier = Modifier
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        )
-                        {
-
-
-                        }
-                )
-
-
-
-
-            }
-            Spacer(modifier = Modifier.height(30.dp))
-            MainButton(buttonBackClr,
-                Color.Transparent,
-                "Sign In",
-                60.dp,
-                0.dp,
-                onClick = {
-                    newRouts.invoke(Screen.DashboardScreen.route)
-                }
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        )
-                        {
-                            newRouts.invoke(Screen.RegisterFLowScreen.route)
-
-                        },
-
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Don’t have an account?",
-                        color = Color.White,
-                        style = TextSize16().Regular()
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = "Sign up.",
-                        color = Color.White,
-                        style = TextSize16().bold()
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(25.dp))
-            Row(
-                modifier = Modifier,
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(15.dp)
-            )
-            {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height((0.55).dp)
-                        .background(Color.White)
-                )
-                Text(
-                    text = "Or use your social login",
-                    color = Color.White,
-                    style = TextSize14().Regular()
-                )
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height((0.55).dp)
-                        .background(Color.White)
-                )
-
-            }
-            Spacer(modifier = Modifier.height(25.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                )
-                {
-                    socialLoginCard(Res.drawable.apple, onClick = {})
-                    Spacer(modifier = Modifier.width(20.dp))
-                    socialLoginCard(Res.drawable.google, onClick = {})
-
-                }
-            }
-            Spacer(modifier = Modifier.height(30.dp))
-            MainButton(Color.Transparent,
-                Color.Transparent,
-                "Continue As Guest",
-                60.dp,
-                0.dp,
-                onClick = {
-                    newRouts.invoke(Screen.DashboardScreen.route)
-                }
-            )
-            Spacer(modifier = Modifier.height(40.dp))
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                contentAlignment = Alignment.Center
-            )
-            {
-                Row(
-                    modifier = Modifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                )
-                {
-                    Image(painter = painterResource(Res.drawable.ic_youtube),
-                        contentDescription = "youtube Icon",
-                    )
-                    Text(
-                        text = "/@ettanehsan",
-                        color = Color.White,
-                        style = TextSize18().Medium()
-                    )
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 12.dp)
+                    .imePadding()
+                ,
 
+                )
+            {
+                Spacer(modifier = Modifier.height(70.dp))
+                topHeading()
+
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(text ="Account Login",
+                    color = bgColor,
+                    style = TextSize28().boldExtraBold()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+                RoleSwitcher(
+                    selected = loginVm.accountType,
+                    onSelect = {
+                        loginVm.switchAccountType(it)
+
+                    }
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(text ="Institutional Email",
+                    color = fieldText,
+                    style = TextSize14().semiBold()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                SimpleInputFieldWithErrorNew(
+                    text = loginVm.email,
+                    hint =  if(loginVm.accountType== AuthAccountType.Teacher)"dr.abc@biit.edu.pk" else "2023-ARID-0000@biit.edu.pk",
+                    errorMessage = null,
+                    onValueChange = {
+                        loginVm.email=it
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(text ="Password",
+                    color = fieldText,
+                    style = TextSize14().semiBold()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                SimplePasswordInputFieldNew(
+                    text = loginVm.password,
+                    hint =  "Enter password",
+                    errorMessage = null,
+                    onValueChange = {
+                        loginVm.password=it
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                MainButtonNew(heading = "Login"){
 
                 }
-
             }
+            Spacer(modifier = Modifier.height(50.dp))
+            DataCellFooter(onClick = {
+                newRouts.invoke(Screen.DataCellLoginScreenFlow.route)
+
+            })
+
+            Spacer(modifier = Modifier.height(20.dp))
 
 
+        }
+
+    }
 
 
+}
 
-
-
+@Composable
+private fun DataCellFooter(onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Are you from the administration?",
+            color = loginTabUnselectedTxtClr,
+            textAlign = TextAlign.Center,
+            style = TextSize13().Regular()
+        )
+        val shape = RoundedCornerShape(8.dp)
+        Box(
+            modifier = Modifier
+                .height(34.dp)
+                .background(Color.White, shape)
+                .border(1.dp, fieldBorder, shape)
+                .clickable(interactionSource = MutableInteractionSource(),
+                    indication = null){
+                        onClick()
+                }
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Login via Data Cell Portal",
+                color = bgColor,
+                style = TextSize13().bold()
+            )
         }
     }
 }
 @Composable
-fun socialLoginCard(
-    icon: DrawableResource,
-    onClick:()-> Unit
-)
+fun topHeading()
 {
-    Card(
+    Row(
         modifier = Modifier
-            .size(60.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-             onClick.invoke()
-            }
-            .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(10.dp),
-                clip = false,
-                ambientColor = blurClr.copy(alpha = 0.15f),
-                spotColor = blurClr.copy(alpha = 0.15f)
-            )
-            .border(
-                width = 0.dp,
-                color = White,
-                shape = RoundedCornerShape(10.dp)
-            ),
-        shape = RoundedCornerShape(10.dp),
-        backgroundColor = White,
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     )
     {
-        Box(
+        Image(painter = painterResource(Res.drawable.book_ic),
+            "Book",
             modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
+                .size(24.dp)
         )
-        {
-            Image(painter = painterResource(icon),
-                contentDescription = "Icon")
-        }
+        Spacer(modifier = Modifier.width(10.dp))
 
-
+        Text(text ="Lesson Maker",
+            color = bgColor,
+            style = TextSize18().boldExtraBold()
+        )
 
     }
 
-
 }
 
+
+@Composable
+private fun RoleSwitcher(selected: AuthAccountType, onSelect: (AuthAccountType) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(loginTabSelectionBg , RoundedCornerShape(12.dp))
+            .padding(4.dp)
+    ) {
+        RoleTab(
+            text = "Teacher",
+            selected = selected == AuthAccountType.Teacher,
+            onClick = { onSelect(AuthAccountType.Teacher) },
+            modifier = Modifier.weight(1f)
+        )
+        RoleTab(
+            text = "Student",
+            selected = selected == AuthAccountType.Student,
+            onClick = { onSelect(AuthAccountType.Student) },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun RoleTab(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(8.dp)
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .then(if (selected) Modifier.shadow(2.dp, shape) else Modifier)
+            .background(if (selected) White else Color.Transparent, shape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = if (selected) bgColor else loginTabUnselectedTxtClr,
+            style = if (selected) TextSize14().bold() else TextSize14().semiBold()
+        )
+    }
+}
 

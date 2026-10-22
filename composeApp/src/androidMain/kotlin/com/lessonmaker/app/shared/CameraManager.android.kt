@@ -1,10 +1,13 @@
 package com.lessonmaker.app.shared
 
 import android.content.ContentResolver
+import android.content.Context
+import android.content.ContextWrapper
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import com.lessonmaker.app.base.BaseActivity
 import com.lessonmaker.app.extensionFunctions.handleNull
 import com.lessonmaker.app.shared.map.findActivity
 import com.lessonmaker.app.shared.media.BitmapUtils
@@ -20,7 +23,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 @Composable
-actual fun rememberCameraManager(onResult: (SharedImage?) -> Unit): CameraManager {
+actual fun rememberCameraManager(allowsEditing: Boolean,onResult: (SharedImage?) -> Unit): CameraManager {
     val context = LocalContext.current
     val contentResolver: ContentResolver = context.contentResolver
     return remember {
@@ -58,6 +61,11 @@ actual fun rememberCameraManager(onResult: (SharedImage?) -> Unit): CameraManage
     }
 }
 
+fun Context.findActivity(): BaseActivity? = when (this) {
+    is BaseActivity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 actual class CameraManager actual constructor(
     private val onLaunch: () -> Unit
 ) {

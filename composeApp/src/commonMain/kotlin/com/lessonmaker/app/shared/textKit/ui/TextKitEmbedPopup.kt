@@ -1,0 +1,347 @@
+package com.lessonmaker.app.shared.textkit.ui
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.DragIndicator
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.coerceAtLeast
+import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextOverflow
+import coil3.compose.SubcomposeAsyncImage
+import com.lessonmaker.app.shared.textkit.editor.core.TextKitEditorManager
+import com.lessonmaker.app.shared.textkit.editor.core.parser.EmbedTypes
+import com.lessonmaker.app.shared.textkit.editor.core.parser.embedCodeTextOf
+import com.lessonmaker.app.shared.textkit.editor.core.parser.embedLanguageOf
+import com.lessonmaker.app.shared.textkit.editor.core.parser.embedNameOf
+import com.lessonmaker.app.shared.textkit.editor.core.parser.embedUrlOf
+import com.lessonmaker.app.shared.textkit.theme.TextKitTheme
+
+import com.lessonmaker.app.shared.textkit.ui.state.TextKitState
+import com.lessonmaker.app.shared.textkit.ui.table.TextKitEditableTable
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import lessonmaker.composeapp.generated.resources.Res
+import lessonmaker.composeapp.generated.resources.close_text
+import lessonmaker.composeapp.generated.resources.open_label
+import lessonmaker.composeapp.generated.resources.remove_label
+import lessonmaker.composeapp.generated.resources.text_kit_banner
+
+import kotlin.math.roundToInt
+
+/**
+ * Popup anchored to the embedded-block placeholder whose popup is open ([TextKitState.activeEmbed]).
+ * Renders nothing when none is active.
+ *
+ * For a `table` it renders the actual table (parsed from the stored JSON) so the user can *see* it
+ * without the editor having to render it inline; other embed types fall back to showing their raw
+ * JSON. A **Eliminar** action removes the placeholder (and its JSON node) from the document.
+ *
+ * Place it in the same `Box` as the editor so it shares the coordinate space:
+ * ```
+ * Box {
+ *     TextKitEditor(state = state)
+ *     TextKitEmbedPopup(state = state)
+ * }
+ * ```
+ */
+@Composable
+fun TextKitEmbedPopup(
+    state: TextKitState,
+    modifier: Modifier = Modifier,
+    onClose: () -> Unit = { state.dismissEmbedPopup() },
+    onRemove: () -> Unit = { state.removeActiveEmbed() },
+    onSync: (String) -> Unit = { state.updateActiveEmbed(it) },
+    onOpenDocument: ((url: String) -> Unit)? = null,
+) {
+    val embed = state.activeEmbed ?: return
+    val anchor = state.activeEmbedBoundingBox() ?: return
+    // Documents delegate opening to the host app; when it provides no handler, hand the url to the
+    // platform (browser tab / system viewer) via Compose's UriHandler.
+    val uriHandler = LocalUriHandler.current
+    val openDocument: (String) -> Unit = { url -> onOpenDocument?.invoke(url) ?: uriHandler.openUri(url) }
+
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        val gap = with(density) { 6.dp.roundToPx() }
+        val maxW = constraints.maxWidth
+        val maxH = constraints.maxHeight
+        var cardSize by remember { mutableStateOf(IntSize.Zero) }
+        val dragOffset = state.embedPopupOffset
+
+        // Anchored base position: below the placeholder, flipping above if it would overflow.
+        val baseX = anchor.left.roundToInt()
+        val below = anchor.bottom.roundToInt() + gap
+        val above = anchor.top.roundToInt() - gap - cardSize.height
+        val baseY = if (below + cardSize.height <= maxH || above < 0) below else above
+
+        // Add the user's drag, then clamp so the card stays fully on-screen — this is what keeps a
+        // large table popup reachable in landscape, where the anchor may sit off the visible area.
+        val x = (baseX + dragOffset.x.roundToInt())
+            .coerceIn(
+                0, (maxW - cardSize.width)
+                    .coerceAtLeast(0)
+            )
+        val y = (baseY + dragOffset.y.roundToInt())
+            .coerceIn(
+                0, (maxH - cardSize.height)
+                    .coerceAtLeast(0)
+            )
+
+        // Never let the card exceed the viewport height; its content scrolls within this cap.
+        val availableHeight = (with(density) { maxH.toDp() } - 16.dp)
+            .coerceAtLeast(0.dp)
+
+        EmbedPopupContent(
+            embed = embed,
+            onClose = onClose,
+            onRemove = onRemove,
+            onSync = onSync,
+            onOpenDocument = openDocument,
+            onDrag = { state.dragEmbedPopup(it) },
+            maxHeight = availableHeight,
+            modifier = Modifier
+                .offset { IntOffset(x, y) }
+                .onSizeChanged { cardSize = it },
+        )
+    }
+}
+
+@Composable
+private fun EmbedPopupContent(
+    embed: TextKitEditorManager.EmbedInfo,
+    onClose: () -> Unit,
+    onRemove: () -> Unit,
+    onSync: (String) -> Unit,
+    onOpenDocument: (String) -> Unit,
+    onDrag: (Offset) -> Unit,
+    maxHeight: Dp,
+    modifier: Modifier = Modifier,
+) {
+    // Tables carry an inline editor (with a side rail), so give them more room than image/document.
+    val maxWidth = if (embed.embedType == EmbedTypes.Table) 460.dp else 360.dp
+    Card(
+        modifier = modifier.widthIn(max = maxWidth).heightIn(max = maxHeight),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = TextKitTheme.colors.surface,
+            contentColor = TextKitTheme.colors.onSurface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            // Header doubles as a drag handle so the popup can be moved anywhere on screen.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(embed.range) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            onDrag(dragAmount)
+                        }
+                    },
+            ) {
+                Icon(
+                    Icons.Rounded.DragIndicator,
+                    contentDescription = null,
+                    tint = TextKitTheme.colors.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = embed.label,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f).padding(start = 6.dp),
+                )
+                IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = stringResource(Res.string.close_text)
+                    )
+                }
+            }
+            HorizontalDivider()
+
+            // The body flexes to the available height (fill = false keeps small embeds compact) and
+            // its own scroll handles anything taller than the capped popup.
+            Box(modifier = Modifier.weight(1f, fill = false)) {
+                when (embed.embedType) {
+                    // View-only (#127): the node's attrs.url is the content's source. While it
+                    // loads a spinner holds the space; a missing or failing url falls back to the
+                    // banner so the popup never renders empty.
+                    EmbedTypes.Image -> {
+                        val url = remember(embed.rawJson) { embedUrlOf(embed.rawJson) }
+                        if (url == null) {
+                            Image(
+                                painter = painterResource(Res.drawable.text_kit_banner),
+                                contentDescription = embed.label,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+                            )
+                        } else {
+                            SubcomposeAsyncImage(
+                                model = url,
+                                contentDescription = embed.label,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+                                loading = {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                },
+                                error = {
+                                    Image(
+                                        painter = painterResource(Res.drawable.text_kit_banner),
+                                        contentDescription = embed.label,
+                                        contentScale = ContentScale.Fit,
+                                        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+                                    )
+                                },
+                            )
+                        }
+                    }
+
+                    EmbedTypes.Table -> TextKitEditableTable(
+                        rawJson = embed.rawJson,
+                        onSync = onSync,
+                    )
+
+                    // View-only (#127): a card from the node's attributes; opening is delegated to
+                    // the host app (or the platform) rather than bundling a document renderer.
+                    EmbedTypes.Document -> {
+                        val url = remember(embed.rawJson) { embedUrlOf(embed.rawJson) }
+                        val name = remember(embed.rawJson) { embedNameOf(embed.rawJson) } ?: embed.label
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(
+                                Icons.Rounded.Description,
+                                contentDescription = null,
+                                tint = TextKitTheme.colors.onSurfaceVariant,
+                                modifier = Modifier.size(32.dp).padding(end = 8.dp),
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                if (url != null) {
+                                    Text(
+                                        text = url,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextKitTheme.colors.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                            if (url != null) {
+                                TextButton(onClick = { onOpenDocument(url) }) {
+                                    Text(stringResource(Res.string.open_label))
+                                }
+                            }
+                        }
+                    }
+
+                    EmbedTypes.CodeBlock -> {
+                        val code = remember(embed.rawJson) { embedCodeTextOf(embed.rawJson).orEmpty() }
+                        val language = remember(embed.rawJson) { embedLanguageOf(embed.rawJson) }
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            if (language != null) {
+                                Text(
+                                    text = language,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextKitTheme.colors.onSurfaceVariant,
+                                )
+                            }
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                Text(
+                                    text = code,
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                    ),
+                                )
+                            }
+                        }
+                    }
+
+                    // Any other embed: show the stored JSON so it is at least inspectable.
+                    else -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text(text = embed.rawJson, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(
+                    onClick = onRemove,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = TextKitTheme.colors.error
+                    ),
+                ) {
+                    Text(stringResource(Res.string.remove_label))
+                }
+            }
+        }
+    }
+}
+

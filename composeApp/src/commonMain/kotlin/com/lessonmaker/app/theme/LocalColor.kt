@@ -11,6 +11,21 @@ val inputBackgroundColor = Color(0xFFFFFDFD)
 val TextHintColor = Color(0xFF1D1D1D)
 val TextColor = Color(0xFF666666)
 
+val loginTabSelectionBg = Color(0xFFE2E8F0)
+
+val loginTabUnselectedTxtClr= Color(0xFF64748B)
+val dataCellInfoBoxBg= Color(0xFFDBEAFE)
+
+val REdF14336 = Color(0xFFF14336)
+
+val fieldBorder = Color(0xFFE2E8F0)
+val fieldText = Color(0xFF1E293B)
+val fieldHint = Color(0xFF94A3B8)
+val fieldIcon = Color(0xFF64748B)
+val fieldCursor = Color(0xFF2563EB)
+
+
+
 var TextColor1E = Color(0xFF1E1E1E)
 var buttonBackClr=Color(0xFF699FCE)
 var blurClr = Color(0xFF2549961A)

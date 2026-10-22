@@ -1,0 +1,326 @@
+package com.lessonmaker.app.shared.textkit.editor.core.transactions
+
+import androidx.compose.ui.text.TextRange
+import com.lessonmaker.app.shared.textkit.editor.components.TextEditorDecoratorItem
+import com.lessonmaker.app.shared.textkit.editor.components.TextEditorListItem
+import com.lessonmaker.app.shared.textkit.editor.core.converters.PieceTableConverter
+import com.lessonmaker.app.shared.textkit.editor.core.converters.TextEditorConverter
+import com.lessonmaker.app.shared.textkit.editor.core.interfaces.TextEditorInitTransaction
+import com.lessonmaker.app.shared.textkit.editor.core.models.TextEditorDocumentModel
+import com.lessonmaker.app.shared.textkit.editor.core.models.TextEditorModel
+import com.lessonmaker.app.shared.textkit.editor.core.parser.BaseParagraph
+import com.lessonmaker.app.shared.textkit.editor.core.parser.BaseText
+import com.lessonmaker.app.shared.textkit.editor.core.parser.Blockquote
+import com.lessonmaker.app.shared.textkit.editor.core.parser.BulletedList
+import com.lessonmaker.app.shared.textkit.editor.core.parser.ListItem
+import com.lessonmaker.app.shared.textkit.editor.core.parser.OrderedList
+import com.lessonmaker.app.shared.textkit.editor.core.parser.TaskList
+import com.lessonmaker.app.shared.textkit.editor.core.parser.TaskListItem
+import com.lessonmaker.app.shared.textkit.editor.core.parser.LinkMark
+import com.lessonmaker.app.shared.textkit.editor.core.parser.Mark
+import com.lessonmaker.app.shared.textkit.editor.core.parser.TEXT_EDITOR_JSON
+import com.lessonmaker.app.shared.textkit.editor.core.parser.TextEditorDocument
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.PieceTableSnapshot
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.RichTextEditorBasePieceTable
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.RichTextEditorPieceTable
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.models.RichPieceTransaction
+import com.lessonmaker.app.shared.textkit.editor.core.piecetable.models.TextDecoratorModel
+import com.lessonmaker.app.shared.textkit.editor.models.MarkSearchType
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.lists.ListItemTransaction
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.marks.FormatTransaction
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.models.TextEditorItem
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.models.TextEditorParagraph
+import com.lessonmaker.app.shared.textkit.editor.core.transactions.models.TextEditorTransactionType
+import com.lessonmaker.app.shared.textkit.editor.models.TextKitConfiguration
+import com.lessonmaker.app.shared.textkit.editor.utils.EMPTY_JSON
+import com.lessonmaker.app.shared.textkit.editor.utils.endsWithLineBreak
+import com.lessonmaker.app.shared.textkit.editor.utils.fastForEach
+
+internal class TextEditorTransaction(private val configuration: TextKitConfiguration) :
+    TextEditorInitTransaction {
+
+    internal val pieceTable: RichTextEditorBasePieceTable by lazy { RichTextEditorPieceTable() }
+    internal var isViewer: Boolean = false
+
+    override val text get() = pieceTable.text
+
+    override val json: String
+        get() {
+            val current = document
+            return if (current.content.isEmpty()) EMPTY_JSON
+            else TEXT_EDITOR_JSON.encodeToString(TextEditorDocument.serializer(), current)
+        }
+
+    /**
+     * The current document as a parsed AST. Exposed so export formats other than JSON (see
+     * `editor.core.export.DocumentSerializer`) can walk the same tree the JSON encoder uses.
+     */
+    internal val document: TextEditorDocument
+        get() = PieceTableConverter.getNewDocument(pieceTable)
+
+    override fun loadWith(
+        initialJson: String,
+        isViewer: Boolean
+    ) {
+        this.isViewer = isViewer
+        val textEditorDocument =
+            TEXT_EDITOR_JSON.decodeFromString(TextEditorDocument.serializer(), initialJson)
+        val filteredContent = if (this.isViewer) {
+            textEditorDocument.content
+        } else {
+            // Top-level blockquotes survive an editor load the same way they do in the viewer
+            // (#126) — their content pieces carry the BlockquoteDecorator attribute, and the
+            // export groups them back into blockquote nodes. A blockquote nested inside a
+            // listItem/taskItem still unwraps into its item's paragraphs: the list machinery has
+            // no representation for it, and an un-unwrapped nested quote renders but never saves
+            // (#120's sibling case).
+            textEditorDocument.content.map { it.unwrapNestedBlockquotes() }
+        }
+        val document = TextEditorConverter.getAsTextWithMarks(
+            TextEditorDocument(filteredContent),
+            configuration
+        )
+        pieceTable.build(document)
+    }
+
+    /**
+     * Unwraps blockquotes nested inside list items into their item's paragraphs — the list
+     * machinery has no representation for a quote, and an un-unwrapped nested quote renders in the
+     * editor but never saves. Top-level blockquotes are left intact (#126): their content carries
+     * the decorator attribute and round-trips.
+     */
+    private fun BaseParagraph.unwrapNestedBlockquotes(): BaseParagraph = when (this) {
+        is BulletedList -> copy(content = content.map { it.unwrapInsideItem() })
+        is OrderedList -> copy(content = content.map { it.unwrapInsideItem() })
+        is TaskList -> copy(content = content.map { it.unwrapInsideItem() })
+        else -> this
+    }
+
+    /** Flattens a blockquote (at any depth) into the blocks it contains — nested-in-list use only. */
+    private fun BaseParagraph.flattenBlockquotes(): List<BaseParagraph> = when (this) {
+        is Blockquote -> content.flatMap { it.flattenBlockquotes() }
+        else -> listOf(unwrapNestedBlockquotes())
+    }
+
+    private fun BaseText.unwrapInsideItem(): BaseText = when (this) {
+        is ListItem -> copy(content = content.flatMap { it.flattenBlockquotes() })
+        is TaskListItem -> copy(content = content.flatMap { it.flattenBlockquotes() })
+        else -> this
+    }
+
+    override fun fromDocument(document: TextEditorDocumentModel) {
+        pieceTable.build(document)
+    }
+
+    override fun insert(model: TextEditorModel, offset: Int) = pieceTable.insert(model, offset)
+
+    override fun delete(offset: Int, length: Int) = pieceTable.delete(offset, length)
+
+    override fun update(offset: Int, length: Int, model: TextEditorModel): Boolean {
+        val resultDelete = pieceTable.delete(offset, length)
+        val resultInsert = pieceTable.insert(model, offset)
+        return resultDelete && resultInsert
+    }
+
+    override fun getTransactionMarks(
+        leftModel: TextEditorModel?,
+        centralModel: TextEditorModel,
+        rightModel: TextEditorModel?,
+        offset: Int,
+        length: Int,
+        marks: Set<Mark>
+    ): RichPieceTransaction {
+        return pieceTable.getTransactionMarks(
+            leftModel,
+            centralModel,
+            rightModel,
+            offset,
+            length,
+            marks
+        )
+    }
+
+    override fun updateMarks(
+        leftModel: TextEditorModel?,
+        centralModel: TextEditorModel,
+        rightModel: TextEditorModel?,
+        offset: Int,
+        length: Int,
+        marks: Set<Mark>
+    ): Boolean {
+        val transaction =
+            getTransactionMarks(leftModel, centralModel, rightModel, offset, length, marks)
+        return pieceTable.updateMarks(transaction)
+    }
+
+    override fun upsertMarks(transactions: List<RichPieceTransaction>) =
+        pieceTable.updateMarks(transactions)
+
+    override fun getLink(
+        start: Int,
+        end: Int,
+        configuration: TextKitConfiguration
+    ): Pair<String?, TextRange> {
+        val result = pieceTable.getLineContent(start, end).getMarksWithType(configuration)
+        return when {
+            result.hasLink -> {
+                val link = result.marks.filterIsInstance<LinkMark>().first().attrs.href
+                link to result.range
+            }
+
+            else -> null to TextRange(start, end)
+        }
+    }
+
+    override fun getMarksWithType(
+        start: Int,
+        end: Int,
+        configuration: TextKitConfiguration
+    ): MarkSearchType {
+        val base = pieceTable.getLineContent(start, end).getMarksWithType(configuration)
+        // For a collapsed caret the line-content walk resolves to the paragraph that ENDS at the
+        // caret, so a caret sitting right after a list item's trailing line break inherits that
+        // item's list type — even when it actually rests on the following (often empty) paragraph.
+        // The forward paragraph is NOT present in that walk's data (data.size == 1 at the boundary),
+        // so it can't be derived in-layer; re-derive the list type from the paragraph that STARTS at
+        // the caret (peek one char forward) so an empty paragraph after a list is not marked as a
+        // list, while the start of a following list item still is.
+        if (start != end) return base
+        return base.copy(listItem = forwardListItemAt(start))
+    }
+
+    /**
+     * List type of the paragraph the collapsed caret at [offset] belongs to, resolved forward: the
+     * first piece of the range `[offset, offset + 1)` carries its paragraph's type (a bare line-break
+     * piece for an empty paragraph yields [TextEditorListItem.None]; a list item's decorator yields
+     * its list type). At the document end the range collapses and falls back to the last paragraph.
+     */
+    private fun forwardListItemAt(offset: Int): TextEditorDecoratorItem {
+        val end = (offset + 1).coerceAtMost(text.length)
+        return pieceTable.getLineContent(offset, end)
+            .firstParagraphTypeInRange()
+            ?: TextEditorListItem.None
+    }
+
+    override fun containsDecorator(start: Int, end: Int): Pair<Boolean, TextRange> {
+        val textLength = text.length
+
+        if (start > textLength || end > textLength) {
+            return Pair(false, TextRange.Zero)
+        }
+
+        val result = pieceTable.getLineContent(start, end).getAllModelsInRange()
+            .filter { it.isDecorator }
+            .map { it }
+
+        return when (result.size) {
+            1 -> {
+                val model = result.first()
+                val range = TextRange(
+                    model.offsetInDocument,
+                    model.offsetInDocument + model.piece.length
+                )
+                Pair(true, range)
+            }
+
+            else -> Pair(result.isNotEmpty(), TextRange.Zero)
+        }
+    }
+
+    override fun getParagraphs(): List<TextEditorParagraph> {
+        val paragraphs = arrayListOf<TextEditorParagraph>()
+        val children = arrayListOf<TextEditorItem>()
+        pieceTable.annotatedText.fastForEach { model ->
+            val item = TextEditorItem.from(model)
+            if (item.text.endsWithLineBreak()) {
+                paragraphs.add(TextEditorParagraph(children.plus(item).toList()))
+                children.clear()
+            } else {
+                children.add(item)
+            }
+        }
+        if (children.isNotEmpty()) {
+            paragraphs.add(TextEditorParagraph(children.toList()))
+            children.clear()
+        }
+        return paragraphs
+    }
+
+    internal fun getLineContentModels(start: Int, end: Int) =
+        getLineContent(start, end).getAllModelsInRange()
+
+    internal fun getLineContent(start: Int, end: Int) = pieceTable.getLineContent(start, end)
+
+    internal fun getLineContentWithNeighborParagraphs(start: Int, end: Int) =
+        pieceTable.getLineContentWithNeighborListItems(start, end)
+
+    override fun updateDocument(
+        prevMarks: Set<Mark>,
+        currMarks: Set<Mark>,
+        prevListItem: TextEditorDecoratorItem,
+        currListItem: TextEditorDecoratorItem,
+        range: TextRange,
+        transactionType: TextEditorTransactionType
+    ) = when {
+        transactionType is TextEditorTransactionType.Alignment -> {
+            // Paragraph-level: retags whole paragraphs, so it runs even for a collapsed caret.
+            pieceTable.updateTextAlign(range.min, range.max, transactionType.textAlign) to range
+        }
+
+        prevListItem != currListItem -> {
+            ListItemTransaction.toggleParagraphsToListItems(this, prevListItem, currListItem, range)
+        }
+
+        else -> {
+            if (range.collapsed && transactionType == TextEditorTransactionType.Format) false to range
+            else FormatTransaction.updateDocument(
+                this,
+                prevMarks,
+                currMarks,
+                range,
+                configuration,
+                transactionType
+            )
+        }
+    }
+
+    /**
+     * The blockquote attribute of the paragraph an insertion at [offset] lands in, or null when it
+     * is not quoted (#126). Resolved FORWARD (the paragraph starting at a boundary, not the one
+     * ending there) so typing at the start of the paragraph after a quote does not inherit the
+     * quote; at the document end it falls back to the last paragraph.
+     */
+    internal fun quoteDecoratorAt(offset: Int): TextDecoratorModel.BlockquoteDecorator? {
+        val end = (offset + 1).coerceAtMost(text.length)
+        val paragraph = pieceTable.getLineContent(offset, end).paragraphsInSelectedRange.firstOrNull()
+            ?: return null
+        return paragraph.pieces.firstNotNullOfOrNull { it.piece.decorator as? TextDecoratorModel.BlockquoteDecorator }
+    }
+
+    /** Applies or removes the blockquote attribute over [range]'s plain paragraphs (#126). */
+    internal fun updateBlockquote(range: TextRange, quoted: Boolean): Boolean =
+        pieceTable.updateBlockquote(range.min, range.max, quoted)
+
+    /** Whether every plain paragraph in [range] carries the blockquote attribute. */
+    internal fun isBlockquote(range: TextRange): Boolean = pieceTable.isBlockquote(range.min, range.max)
+
+    override fun getTextAt(offset: Int) = pieceTable.getTextAt(offset)
+
+    override fun getTextInRange(start: Int, end: Int) =
+        pieceTable.getLineContent(start, end).getAllModelsInRange()
+
+    override fun onDecoratorChange(offset: Int): Boolean {
+        val selectedModel =
+            pieceTable.getLineContent(offset, offset + 1).getAllModelsInRange().firstOrNull()
+                ?: return false
+        return pieceTable.updateDecorator(selectedModel)
+    }
+
+    internal fun getLastOffset(): Int = pieceTable.getLastOffset()
+
+    /** Captures the document state for undo/redo. O(1). See [RichTextEditorBasePieceTable.snapshot]. */
+    internal fun snapshot() = pieceTable.snapshot()
+
+    /** Restores a document state captured with [snapshot]. O(1). */
+    internal fun restore(snapshot: PieceTableSnapshot) = pieceTable.restore(snapshot)
+}

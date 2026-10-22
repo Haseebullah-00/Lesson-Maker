@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
@@ -40,11 +42,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -69,6 +74,7 @@ import com.lessonmaker.app.theme.FustatFontFamily
 import com.lessonmaker.app.theme.InputFieldBorderClr
 import com.lessonmaker.app.theme.Medium
 import com.lessonmaker.app.theme.PrimaryColor
+import com.lessonmaker.app.theme.REdF14336
 import com.lessonmaker.app.theme.Regular
 import com.lessonmaker.app.theme.TextColor
 import com.lessonmaker.app.theme.TextHintColor
@@ -81,11 +87,16 @@ import com.lessonmaker.app.theme.White
 import com.lessonmaker.app.theme.blurClr
 import com.lessonmaker.app.theme.bold
 import com.lessonmaker.app.theme.border
+import com.lessonmaker.app.theme.fieldCursor
+import com.lessonmaker.app.theme.fieldHint
+import com.lessonmaker.app.theme.fieldIcon
+import com.lessonmaker.app.theme.fieldText
 import com.lessonmaker.app.theme.hintClr
 import com.lessonmaker.app.theme.hintTextColor
 import com.lessonmaker.app.theme.inputBackgroundColor
 import com.lessonmaker.app.theme.inputBorderColorActive
 import com.lessonmaker.app.theme.inputBorderColorNotActive
+import com.lessonmaker.app.theme.loginTabSelectionBg
 import com.lessonmaker.app.theme.semiBold
 
 
@@ -95,6 +106,8 @@ import lessonmaker.composeapp.generated.resources.Res
 import lessonmaker.composeapp.generated.resources.arrow_down
 import lessonmaker.composeapp.generated.resources.arrow_drop_down
 import lessonmaker.composeapp.generated.resources.eye_off
+import lessonmaker.composeapp.generated.resources.ic_eye_close
+import lessonmaker.composeapp.generated.resources.ic_password_open_eye
 import lessonmaker.composeapp.generated.resources.selected_notification_icon
 import lessonmaker.composeapp.generated.resources.selected_profile_icon
 import lessonmaker.composeapp.generated.resources.unselected_notification_icon
@@ -212,6 +225,281 @@ fun SimpleInputField(
     }
 }
 
+
+@Composable
+fun SimpleInputFieldWithErrorNew(
+    text: String,
+    isLast: Boolean = false,
+    enabled: Boolean = true,
+    hint: String,
+    showClose: Boolean = true,
+    keyBoardType: KeyboardType = KeyboardType.Text,
+    errorMessage: String? = null,
+    maxLength: Int? = null,
+    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+
+    val borderColor = when {
+        errorMessage != null -> REdF14336 // Red color for errors (same as MobileNumberBox)
+        !enabled -> Color(0xFFDEDEDE)
+        else -> loginTabSelectionBg  // Default border color
+    }
+
+    val textColor = if (errorMessage != null) {
+        REdF14336 // Red text color for errors
+    } else {
+        fieldText // Default text color
+    }
+    val iconColor=if(errorMessage!=null){
+        REdF14336
+    } else{
+        fieldIcon
+    }
+
+    val fieldTextStyle = InputFieldTextStyle().copy(
+        color = textColor,
+        fontSize = 15.sp,
+        lineHeight = 20.sp
+    )
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.5.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .background(White)
+                .then(
+                    if (enabled) {
+                        Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) {
+                            // Focus handling if needed
+                        }
+                    } else {
+                        Modifier
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BasicTextField(
+                    value = text,
+                    onValueChange = {
+                        val filtered = if (keyBoardType == KeyboardType.Number) {
+                            it.filter { it.isDigit() }
+                        } else {
+                            it
+                        }
+
+                        if (maxLength == null || filtered.length <= maxLength) {
+                            onValueChange(filtered)
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(vertical = 12.dp),
+                    textStyle = fieldTextStyle,
+                    singleLine = true,
+                    enabled = enabled,
+                    cursorBrush = SolidColor(if (errorMessage != null) REdF14336 else fieldCursor),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = keyBoardType,
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = if (isLast) ImeAction.Done else ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { keyboardController?.hide() }
+                    ),
+                    interactionSource = interactionSource,
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (text.isEmpty()) {
+                                Text(
+                                    text = hint,
+                                    style = TextSize16().copy(fontSize = 15.sp),
+                                    color = if (errorMessage != null) REdF14336 else fieldHint
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+
+                if (text.isNotEmpty() && showClose && enabled) {
+                    inputFieldClear(tint = iconColor, onValueChange = onValueChange)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SimplePasswordInputFieldNew(
+    text: String,
+    isLast: Boolean = false,
+    enabled: Boolean = true,
+    hint: String,
+    showClose: Boolean = true,
+    errorMessage: String? = null,
+    maxLength: Int? = null,
+    onValueChange: (String) -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var isPasswordVisible by remember { mutableStateOf(false) }
+
+    val borderColor = when {
+        errorMessage != null -> REdF14336 // Red color for errors (same as MobileNumberBox)
+        !enabled -> Color(0xFFDEDEDE)
+        else -> loginTabSelectionBg  // Default border color
+    }
+
+    val textColor = if (errorMessage != null) {
+        REdF14336 // Red text color for errors
+    } else {
+        fieldText // Default text color
+    }
+
+    val fieldTextStyle = InputFieldTextStyle().copy(
+        color = textColor,
+        fontSize = 15.sp,
+        lineHeight = 20.sp
+    )
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.5.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .background(White)
+                .then(
+                    if (enabled) {
+                        Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) {}
+                    } else {
+                        Modifier
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                BasicTextField(
+                    value = text,
+                    onValueChange = {
+                        if (maxLength == null || it.length <= maxLength) {
+                            onValueChange(it)
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(vertical = 12.dp),
+                    textStyle = fieldTextStyle,
+                    singleLine = true,
+                    enabled = enabled,
+                    cursorBrush = SolidColor(if (errorMessage != null) REdF14336 else fieldCursor),
+                    visualTransformation = if (isPasswordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        capitalization = KeyboardCapitalization.None,
+                        imeAction = if (isLast) ImeAction.Done else ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { keyboardController?.hide() }
+                    ),
+                    interactionSource = interactionSource,
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (text.isEmpty()) {
+                                Text(
+                                    text = hint,
+                                    style = TextSize16().copy(fontSize = 15.sp),
+                                    color = if (errorMessage != null) REdF14336 else fieldHint
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+
+                if (showClose && enabled) {
+                    IconButton(
+                        onClick = { isPasswordVisible = !isPasswordVisible },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(
+                                if (isPasswordVisible)
+                                    Res.drawable.ic_password_open_eye
+                                else
+                                    Res.drawable.ic_eye_close
+                            ),
+                            contentDescription = "Toggle password visibility",
+                            modifier = Modifier.size(20.dp),
+                            colorFilter = ColorFilter.tint(
+                                if (errorMessage != null) REdF14336 else fieldIcon
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+//        // Error message below the field
+//        errorMessage?.let {
+//            Spacer(modifier = Modifier.height(4.dp))
+//            Text(
+//                text = it,
+//                color = REdF14336,
+//                style = TextSize11().Medium()
+//            )
+//        }
+    }
+}
 
 @Composable
 fun MobileNumberBox(dialCode: CountryInfo = defaultCountry, text: String, isLast: Boolean, hint: String="Mobile Number", onValueChange: (String) -> Unit, pickDialCode:((Unit)->Unit)?=null) {
@@ -1109,13 +1397,17 @@ fun commonHintField(hint: String,color: Color= TextHintColor){
 
 
 @Composable
-fun inputFieldClear(onValueChange: (String) -> Unit){
-    IconButton(onClick = { onValueChange("") }) {
-
-//        Image(
-//            painter = painterResource(resource = Res.drawable.vector_notification),
-//            contentDescription = "Clear text",
-//            colorFilter = ColorFilter.tint(inputBorderColorActive)
-//        )
+fun inputFieldClear(
+    onValueChange: (String) -> Unit,
+    tint: Color = PrimaryColor
+) {
+    IconButton(
+        onClick = { onValueChange("") }
+    ) {
+        Image(
+            painter = painterResource(Res.drawable.vector_notification),
+            contentDescription = "Clear text",
+            colorFilter = ColorFilter.tint(tint)
+        )
     }
 }

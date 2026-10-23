@@ -276,6 +276,8 @@ fun AccountScreenFlow(dashboardViewModel: DashboardViewModel,
                             indication = null
                         )
                         {
+                            dashboardViewModel.sharedPreferenceManager.isStudentLoggedIn=false
+                            dashboardViewModel.sharedPreferenceManager.isTeacherLoggedIn=false
                             dashboardRoutes.invoke(Screen.LoginScreenFlow.route)
 
                         }

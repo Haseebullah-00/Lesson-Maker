@@ -13,6 +13,9 @@ val TextColor = Color(0xFF666666)
 
 val loginTabSelectionBg = Color(0xFFE2E8F0)
 
+val deleteBtnBg = Color(0xFFFEE2E2)
+val deleteBtnText = Color(0xFFDC2626)
+
 val loginTabUnselectedTxtClr= Color(0xFF64748B)
 val dataCellInfoBoxBg= Color(0xFFDBEAFE)
 

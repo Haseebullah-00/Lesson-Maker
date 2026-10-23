@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lessonmaker.app.common.MainAppBackground
 import com.lessonmaker.app.common.MainGradientBg
@@ -41,6 +42,11 @@ import com.lessonmaker.app.mainScreen.home.AboutMe.AboutMeScreen
 import com.lessonmaker.app.mainScreen.home.LaunchHomeScreenFlow
 import com.lessonmaker.app.mainScreen.leaderBoard.LeaderBoardScreenFlow
 import com.lessonmaker.app.mainScreen.notification.NotificationScreen
+import com.lessonmaker.app.mainScreen.teacherFlow.RightModalDrawer
+import com.lessonmaker.app.mainScreen.teacherFlow.TeacherSideMenuScreen
+import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.TeacherMyCoursesScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.TeacherLessonScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.addLesson.TeacherAddLessonScreenFLow
 import com.lessonmaker.app.mainScreen.toolbar.ToolBar
 import com.lessonmaker.app.navigationControler.DashboardSubScreen
 import com.lessonmaker.app.navigationControler.Screen
@@ -48,82 +54,272 @@ import com.lessonmaker.app.shared.statusBarStyle.StatusBarIconColor
 import com.lessonmaker.app.shared.statusBarStyle.setStatusBarIconColor
 import com.lessonmaker.app.singleTopNavigation
 import com.lessonmaker.app.theme.PrimaryColor
+import com.lessonmaker.app.theme.White
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
+//@Composable
+//fun DashboardScreen(destination: String? = null, newRouts: (String) -> Unit)
+//{
+//    val dashboardViewModel = koinViewModel<DashboardViewModel>()
+//    // val userViewModel = koinViewModel<UserModel>()
+//    val navController = rememberNavController()
+//    var alertMessage by remember { mutableStateOf("") }
+//    val coroutineScope = rememberCoroutineScope()
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//
+//    setStatusBarIconColor(StatusBarIconColor.Light)
+//
+//
+//    LaunchedEffect(navController) {
+//        navController.currentBackStackEntryFlow.collect { backStackEntry ->
+//
+//        }
+//    }
+//
+//    val scope = rememberCoroutineScope()
+//
+//    val topModifier = if (dashboardViewModel.toolBarViewModel.showToolbar) {
+//        Modifier
+//            .fillMaxSize()
+//        //.statusBarsPadding()
+//        /*.padding(
+//            if (dashboardViewModel.showBottomNavigation) {
+//                PaddingValues(0.dp)
+//            } else {
+//                WindowInsets.navigationBars.asPaddingValues()
+//            }
+//        )*/
+//    } else {
+//        Modifier
+//            .fillMaxSize()
+//        /*.padding(
+//            if (dashboardViewModel.showBottomNavigation) {
+//                PaddingValues(0.dp)
+//            } else {
+//                WindowInsets.navigationBars.asPaddingValues()
+//            }
+//        )*/
+//    }
+//
+//
+//    var backColor = PrimaryColor
+//
+//
+////    Box(modifier = Modifier.background(color = White))
+////    {
+////        MaterialTheme() {
+////            Box {
+////
+////                Scaffold(
+////                    modifier = topModifier,
+////                    containerColor = Transparent,
+////                    bottomBar = {
+////                        if (dashboardViewModel.showBottomNavigation) {
+////                            NavigationWidget(navigationViewModel = dashboardViewModel.navigationViewModel) {
+////                                if (it == "ADD") {
+////
+////                                } else {
+////                                    navController.clearBackIfAtDashBoard(
+////                                        newPath = it,
+////                                        dashboardViewModel = dashboardViewModel
+////                                    )?.let {
+////
+////                                        navController.singleTopNavigation(it)
+////                                    }
+////                                }
+////                            }
+////                        }
+////
+////                    },
+////
+////                    topBar = {
+////                        if (dashboardViewModel.toolBarViewModel.showToolbar) {
+////                            ToolBar(toolBarViewModel = dashboardViewModel.toolBarViewModel) {
+////                                when (it) {
+////                                    DashboardSubScreen.POPBackStack.route -> {
+////                                        navController.popBackStack()
+////                                    }
+////
+////                                    DashboardSubScreen.ShowSideBar.route -> {
+////                                        scope.launch {
+////                                            drawerState.open()
+////                                        }
+////                                    }
+////
+////                                    else -> {
+////                                        navController.navigate(it)
+////                                    }
+////                                }
+////                            }
+////                        }
+////                    }
+////                )
+////                { paddingValues ->
+////                    Box(
+////                        modifier = Modifier
+////                            .fillMaxSize().background(Transparent)
+////                    ) {
+////
+////                        val topBarPadding =
+////                            if (dashboardViewModel.toolBarViewModel.showToolbar) paddingValues.calculateTopPadding() else 0.dp
+////
+////                        val bottomNavigationPadding =
+////                            if (dashboardViewModel.showBottomNavigation) 52.dp else 0.dp
+////                        Box(
+////                            modifier = Modifier.fillMaxSize()
+////                                .padding(top = topBarPadding)
+////                                .padding(
+////                                    bottom =
+////                                        if (dashboardViewModel.showBottomNavigation) {
+////                                            75.dp
+////                                        } else {
+////                                            0.dp
+////                                        }
+////                                )
+////                            /*.then(
+////                                if (dashboardViewModel.showBottomNavigation) {
+////                                    Modifier
+////                                        .padding(bottom = 75.dp)
+////                                        .navigationBarsPadding()
+////                                } else {
+////                                    Modifier
+////                                }
+////                            )*/
+////                            /*.then(
+////                                if (dashboardViewModel.showBottomNavigation) {
+////                                    Modifier.navigationBarsPadding()
+////                                } else {
+////                                    Modifier
+////                                }
+////                            )*/
+////                        )
+////                        {
+////                            Navigations(
+////                                destination = destination,
+////                                navController = navController,
+////                                dashboardViewModel
+////                            ) {
+////                                newRouts.invoke(it)
+////                            }
+////                        }
+////
+////                    }
+////                }
+////            }
+////
+////        }
+////    }
+//
+//
+//    Box(modifier = Modifier.background(color = White)) {
+//        MaterialTheme {
+//
+//            RightModalDrawer(
+//                modifier = Modifier.fillMaxSize(),
+//                drawerState = drawerState,
+//                gesturesEnabled = false,
+//                drawerContent = {
+//                    TeacherSideMenuScreen { route ->
+//                        scope.launch { drawerState.close() }
+//                        when (route) {
+//                            DashboardSubScreen.POPBackStack.route -> navController.popBackStack()
+//                            "close" -> Unit
+//                            else -> navController.singleTopNavigation(route)
+//                        }
+//                    }
+//                }
+//            ) {
+//                // everything that used to be inside MaterialTheme goes here
+//                Box {
+//                    Scaffold(
+//                        modifier = topModifier,
+//                        containerColor = Transparent,
+//                        bottomBar = { if (dashboardViewModel.showBottomNavigation) {
+//                            // Track route changes using snapshotFlow
+//                            var currentRoute by remember { mutableStateOf<String?>(null) }
+//
+//                            LaunchedEffect(navController) {
+//                                snapshotFlow { navController.currentBackStackEntry?.destination?.route }
+//                                    .collect { route ->
+//                                        currentRoute = route
+//                                        println("📍 DashboardScreen: Route changed to: $route")
+//                                    }
+//                            }
+//
+//                            NavigationWidget(
+//                                homeNewRoute = {
+////                            if (it.equals(DashboardSubScreen.AccountScreen.route)) {
+////                                scope.launch { drawerState.open() }
+////                                return@NavigationWidget
+////                            }
+//                                    navController.navigate(it)
+//                                },
+//                                currentRoute = currentRoute
+//                            )
+//                        }},
+//                        topBar = { /* unchanged, ShowSideBar already calls drawerState.open() */ }
+//                    ) { paddingValues ->
+//                        /* unchanged */
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//
+//}
+
 @Composable
-fun DashboardScreen(destination: String? = null, newRouts: (String) -> Unit)
-{
+fun DashboardScreen(destination: String? = null, newRouts: (String) -> Unit) {
     val dashboardViewModel = koinViewModel<DashboardViewModel>()
-    // val userViewModel = koinViewModel<UserModel>()
     val navController = rememberNavController()
-    var alertMessage by remember { mutableStateOf("") }
-    val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     setStatusBarIconColor(StatusBarIconColor.Light)
 
+    // current route, used by the bottom bar
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
-    LaunchedEffect(navController) {
-        navController.currentBackStackEntryFlow.collect { backStackEntry ->
+    Box(modifier = Modifier.background(color = White)) {
+        MaterialTheme {
 
-        }
-    }
+            RightModalDrawer(
+                modifier = Modifier.fillMaxSize(),
+                drawerState = drawerState,
+                gesturesEnabled = false, // opened only via the toolbar menu button
+                drawerContent = {
+                    TeacherSideMenuScreen { route ->
+                        // always close the drawer first
+                        scope.launch { drawerState.close() }
 
-    val scope = rememberCoroutineScope()
-
-    val topModifier = if (dashboardViewModel.toolBarViewModel.showToolbar) {
-        Modifier
-            .fillMaxSize()
-        //.statusBarsPadding()
-        /*.padding(
-            if (dashboardViewModel.showBottomNavigation) {
-                PaddingValues(0.dp)
-            } else {
-                WindowInsets.navigationBars.asPaddingValues()
-            }
-        )*/
-    } else {
-        Modifier
-            .fillMaxSize()
-        /*.padding(
-            if (dashboardViewModel.showBottomNavigation) {
-                PaddingValues(0.dp)
-            } else {
-                WindowInsets.navigationBars.asPaddingValues()
-            }
-        )*/
-    }
-
-
-    var backColor = PrimaryColor
-
-
-    Box(modifier = Modifier.background(color = backColor))
-    {
-        MaterialTheme() {
-            Box {
-                MainGradientBg()
+                        when (route) {
+                            "close" -> Unit
+                            DashboardSubScreen.POPBackStack.route -> navController.popBackStack()
+                            else -> navController.singleTopNavigation(route)
+                        }
+                    }
+                }
+            ) {
                 Scaffold(
-                    modifier = topModifier,
+                    modifier = Modifier.fillMaxSize(),
                     containerColor = Transparent,
+
                     bottomBar = {
                         if (dashboardViewModel.showBottomNavigation) {
-                            NavigationWidget(navigationViewModel = dashboardViewModel.navigationViewModel) {
-                                if (it == "ADD") {
-
-                                } else {
+                            NavigationWidget(
+                                navigationViewModel = dashboardViewModel.navigationViewModel,
+                                currentRoute = currentRoute,
+                                homeNewRoute = { route ->
                                     navController.clearBackIfAtDashBoard(
-                                        newPath = it,
+                                        newPath = route,
                                         dashboardViewModel = dashboardViewModel
-                                    )?.let {
-
-                                        navController.singleTopNavigation(it)
-                                    }
+                                    )?.let { navController.singleTopNavigation(it) }
                                 }
-                            }
+                            )
                         }
-
                     },
 
                     topBar = {
@@ -134,77 +330,34 @@ fun DashboardScreen(destination: String? = null, newRouts: (String) -> Unit)
                                         navController.popBackStack()
                                     }
 
+                                    // menu (hamburger) button -> open drawer
                                     DashboardSubScreen.ShowSideBar.route -> {
-                                        scope.launch {
-                                            drawerState.open()
-                                        }
+                                        scope.launch { drawerState.open() }
                                     }
 
-                                    else -> {
-                                        navController.navigate(it)
-                                    }
+                                    else -> navController.navigate(it)
                                 }
                             }
                         }
                     }
-                )
-                { paddingValues ->
+                ) { paddingValues ->
                     Box(
                         modifier = Modifier
-                            .fillMaxSize().background(Transparent)
+                            .fillMaxSize()
+                            .padding(paddingValues)
                     ) {
-
-                        val topBarPadding =
-                            if (dashboardViewModel.toolBarViewModel.showToolbar) paddingValues.calculateTopPadding() else 0.dp
-
-                        val bottomNavigationPadding =
-                            if (dashboardViewModel.showBottomNavigation) 52.dp else 0.dp
-                        Box(
-                            modifier = Modifier.fillMaxSize()
-                                .padding(top = topBarPadding)
-                                .padding(
-                                    bottom =
-                                        if (dashboardViewModel.showBottomNavigation) {
-                                            75.dp
-                                        } else {
-                                            0.dp
-                                        }
-                                )
-                            /*.then(
-                                if (dashboardViewModel.showBottomNavigation) {
-                                    Modifier
-                                        .padding(bottom = 75.dp)
-                                        .navigationBarsPadding()
-                                } else {
-                                    Modifier
-                                }
-                            )*/
-                            /*.then(
-                                if (dashboardViewModel.showBottomNavigation) {
-                                    Modifier.navigationBarsPadding()
-                                } else {
-                                    Modifier
-                                }
-                            )*/
-                        )
-                        {
-                            Navigations(
-                                destination = destination,
-                                navController = navController,
-                                dashboardViewModel
-                            ) {
-                                newRouts.invoke(it)
-                            }
+                        Navigations(
+                            destination = destination,
+                            navController = navController,
+                            dashboardViewModel = dashboardViewModel
+                        ) {
+                            newRouts.invoke(it)
                         }
-
                     }
                 }
             }
-
         }
     }
-
-
 }
 
 
@@ -243,20 +396,123 @@ fun Navigations(
 
     NavHost(
         navController = navController,
-        startDestination = DashboardSubScreen.LaunchHomeScreenFlow.route
+        startDestination = DashboardSubScreen.TeacherMyCoursesScreenFlow.route
     ) {
 
         composable(DashboardSubScreen.LaunchHomeScreenFlow.route) {
             dashboardViewModel.toolBarViewModel.updateToolBar(
                 showToolbar = true,
-                showAppLogo = false,
-                showNotification = false,
-                showBackText = false,
-                backHeading = "Home"
+
+                showBackText = true,
+                backHeading = "My Courses",
+                subHeading = "Welcome back, Dr. Adnan",
+                showMenu = true
+
             )
             dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
 
             LaunchHomeScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> {
+                            mainNavigationRoute.invoke(newRoute)
+                        }
+
+                        else -> {
+                            navController.navigate(newRoute)
+                        }
+                    }
+
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.TeacherMyCoursesScreenFlow.route) {
+                dashboardViewModel.toolBarViewModel.updateToolBar(
+                    showToolbar = true,
+
+                    showBackText = true,
+                    backHeading = "My Courses",
+                    subHeading = "Welcome back, Dr. Adnan",
+                    showMenu = true
+
+                )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            TeacherMyCoursesScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> {
+                            mainNavigationRoute.invoke(newRoute)
+                        }
+
+                        else -> {
+                            navController.navigate(newRoute)
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+        composable(DashboardSubScreen.TeacherLessonScreenFlow.BASE_ROUTE) {
+            val courseId =
+                it.arguments?.getString(DashboardSubScreen.TeacherLessonScreenFlow.COURSE_ID) ?: ""
+            val courseCode =
+                it.arguments?.getString(DashboardSubScreen.TeacherLessonScreenFlow.COURSE_CODE) ?: ""
+            val courseTitle =
+                it.arguments?.getString(DashboardSubScreen.TeacherLessonScreenFlow.COURSE_NAME) ?: ""
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackImage = true,
+                showBackText = true,
+                backHeading = "$courseCode Lecture Notes",
+                subHeading = courseTitle
+            )
+
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            TeacherLessonScreenFlow(courseId = courseId, courseCode = courseCode, courseName = courseTitle,dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> {
+                            mainNavigationRoute.invoke(newRoute)
+                        }
+
+                        else -> {
+                            navController.navigate(newRoute)
+                        }
+                    }
+
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.TeacherAddLessonScreenFLow.BASE_ROUTE) {
+            val courseId =
+                it.arguments?.getString(DashboardSubScreen.TeacherAddLessonScreenFLow.COURSE_ID) ?: ""
+            val courseCode =
+                it.arguments?.getString(DashboardSubScreen.TeacherAddLessonScreenFLow.COURSE_CODE) ?: ""
+            val courseTitle =
+                it.arguments?.getString(DashboardSubScreen.TeacherAddLessonScreenFLow.COURSE_NAME) ?: ""
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackImage = true,
+                showBackText = true,
+                backHeading = "New Lecture Notes",
+                subHeading = "Course: ${courseCode}${courseTitle}"
+            )
+
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            TeacherAddLessonScreenFLow(courseId = courseId, courseCode = courseCode, courseName = courseTitle,dashboardViewModel = dashboardViewModel) {
                 navController.clearBackIfAtDashBoard(
                     newPath = it,
                     dashboardViewModel = dashboardViewModel

@@ -56,6 +56,17 @@ class LoginVm(
 
     }
 
+    fun sharePrefernce(){
+        if(accountType== AuthAccountType.Teacher){
+            sharedPreferenceManager.isTeacherLoggedIn=true
+            sharedPreferenceManager.isStudentLoggedIn=false
+        }
+        else{
+            sharedPreferenceManager.isStudentLoggedIn=true
+            sharedPreferenceManager.isTeacherLoggedIn=false
+        }
+
+    }
 
 
 

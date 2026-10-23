@@ -165,6 +165,9 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
                 Spacer(modifier = Modifier.height(20.dp))
 
                 MainButtonNew(heading = "Login"){
+                    loginVm.sharePrefernce()
+
+                    newRouts.invoke(Screen.DashboardScreen.route)
 
                 }
             }

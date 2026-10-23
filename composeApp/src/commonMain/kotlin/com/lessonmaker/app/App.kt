@@ -45,7 +45,7 @@ fun AfterKoinInject(destination: String? = null) {
     val navController = rememberNavController()
 
 
-    var startPoint = Screen.WelcomeScreen.route
+    var startPoint = Screen.LoginScreenFlow.route
     if (sharedPreferenceManager.isLoggedIn) {
         startPoint = Screen.DashboardScreen.route
     }

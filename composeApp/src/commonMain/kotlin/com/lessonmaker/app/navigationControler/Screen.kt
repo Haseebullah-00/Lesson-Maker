@@ -1,5 +1,6 @@
 package com.lessonmaker.app.navigationControler
 
+import com.lessonmaker.app.navigationControler.DashboardSubScreen.HomeDetailScreen.Companion.ID
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -39,6 +40,9 @@ sealed class Screen(val route: String) {
 sealed class DashboardSubScreen(val route: String) {
     @Serializable
     data object LaunchHomeScreenFlow : DashboardSubScreen("LaunchHomeScreenFlow")
+
+    @Serializable
+    data object TeacherMyCoursesScreenFlow: DashboardSubScreen("TeacherMyCoursesScreenFlow")
     @Serializable
     data object  AboutMeScreen: DashboardSubScreen(" AboutMeScreen")
     @Serializable
@@ -97,6 +101,55 @@ sealed class DashboardSubScreen(val route: String) {
         }
     }
 
+
+    @Serializable
+    data class TeacherLessonScreenFlow(
+        val courseId: String,
+        val courseCode: String,
+        val courseName: String
+    ) : DashboardSubScreen(START_ROUTE) {
+
+        companion object {
+            const val START_ROUTE = "TeacherLessonScreenFlow"
+            const val COURSE_ID = "courseId"
+            const val COURSE_CODE = "courseCode"
+            const val COURSE_NAME = "courseName"
+
+            const val BASE_ROUTE =
+                "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}"
+
+            fun createRoute(
+                courseId: String,
+                courseCode: String,
+                courseName: String
+            ) = "$START_ROUTE/$courseId/$courseCode/$courseName"
+        }
+    }
+
+
+    @Serializable
+    data class  TeacherAddLessonScreenFLow(
+        val courseId: String,
+        val courseCode: String,
+        val courseName: String
+    ) : DashboardSubScreen(START_ROUTE) {
+
+        companion object {
+            const val START_ROUTE = "TeacherAddLessonScreenFLow"
+            const val COURSE_ID = "courseId"
+            const val COURSE_CODE = "courseCode"
+            const val COURSE_NAME = "courseName"
+
+            const val BASE_ROUTE =
+                "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}"
+
+            fun createRoute(
+                courseId: String,
+                courseCode: String,
+                courseName: String
+            ) = "$START_ROUTE/$courseId/$courseCode/$courseName"
+        }
+    }
     @Serializable
     data object LaunchLatestListingScreen : Screen("LaunchLatestListingScreen")
 

@@ -8,6 +8,9 @@ import kotlinx.serialization.json.Json
 class SharedPreferenceManager(private val settings: Settings) {
 
     private val LOGGED_IN_KEY = "loggedIn"
+
+    private val STUDENT_LOGGED_IN_KEY = "student_loggedIn"
+    private val TEACHER_LOGGED_IN_KEY = "teacher_loggedIn"
     private val ACCESS_TOKEN_KEY = "access_token"
     private val DEVICE_CART_ID_KEY = "deviceCartID"
     private val TEMP_USER= "temp_user"
@@ -27,6 +30,14 @@ class SharedPreferenceManager(private val settings: Settings) {
     var isLoggedIn: Boolean
         get() = settings.getBoolean(LOGGED_IN_KEY, false)
         set(value) = settings.putBoolean(LOGGED_IN_KEY, value)
+
+    var isStudentLoggedIn: Boolean
+        get() = settings.getBoolean(STUDENT_LOGGED_IN_KEY, false)
+        set(value) = settings.putBoolean(STUDENT_LOGGED_IN_KEY, value)
+
+    var isTeacherLoggedIn: Boolean
+        get() = settings.getBoolean(TEACHER_LOGGED_IN_KEY, false)
+        set(value) = settings.putBoolean(TEACHER_LOGGED_IN_KEY, value)
 
     var accessToken: String?
         get() = settings.getStringOrNull(ACCESS_TOKEN_KEY)

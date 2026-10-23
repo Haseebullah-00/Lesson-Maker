@@ -28,6 +28,9 @@ class ToolBarViewModel : ViewModel() {
     var backgroundColor by mutableStateOf(Color.Transparent)
     var backgroundVehicleDataColor by mutableStateOf(White)
 
+    var subHeading by mutableStateOf("")
+    var menuClicked: (() -> Unit)? = null
+
     var currentLocation by mutableStateOf("")
     var isDefaultAddress by mutableStateOf(false)
 
@@ -42,6 +45,7 @@ class ToolBarViewModel : ViewModel() {
         showBackImageWhite: Boolean = false,
 
         backHeading: String = "",
+        subHeading: String = "",
         showMenu: Boolean = false,
         showAppLogo: Boolean = false,
         showShare: Boolean = false,
@@ -60,6 +64,7 @@ class ToolBarViewModel : ViewModel() {
         this.showBackImageWhite = showBackImageWhite
 
         this.backHeading = backHeading
+        this.subHeading = subHeading
         this.showMenu = showMenu
         this.showAppLogo = showAppLogo
         this.showShare = showShare

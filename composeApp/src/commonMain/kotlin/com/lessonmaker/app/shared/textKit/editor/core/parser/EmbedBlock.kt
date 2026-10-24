@@ -87,6 +87,27 @@ internal fun embedCodeTextOf(payload: String): String? = runCatching {
  * such key, a blank value, or is not valid JSON at all — embeds are an opaque passthrough, so a
  * malformed payload degrades to "attribute absent", never to an exception.
  */
+
+internal const val DEFAULT_IMAGE_WIDTH_DP = 300
+internal const val DEFAULT_IMAGE_HEIGHT_DP = 200
+internal const val MIN_IMAGE_WIDTH_DP = 80
+internal const val MAX_IMAGE_WIDTH_DP = 800
+
+internal fun embedImageWidthOf(payload: String): Int? =
+    embedAttrOf(payload, "width")?.toDoubleOrNull()?.toInt()
+
+internal fun embedImageHeightOf(payload: String): Int? =
+    embedAttrOf(payload, "height")?.toDoubleOrNull()?.toInt()
+
+internal fun embedWithImageSize(payload: String, width: Int, height: Int): String {
+    val root = TEXT_EDITOR_JSON.parseToJsonElement(payload).jsonObject
+    val attrs = root["attrs"]?.jsonObject.orEmpty().toMutableMap()
+    attrs["width"] = kotlinx.serialization.json.JsonPrimitive(width)
+    attrs["height"] = kotlinx.serialization.json.JsonPrimitive(height)
+    val out = LinkedHashMap(root)
+    out["attrs"] = kotlinx.serialization.json.JsonObject(attrs)
+    return kotlinx.serialization.json.JsonObject(out).toString()
+}
 private fun embedAttrOf(payload: String, key: String): String? = runCatching {
     TEXT_EDITOR_JSON.parseToJsonElement(payload)
         .jsonObject["attrs"]?.jsonObject?.get(key)?.jsonPrimitive?.contentOrNull

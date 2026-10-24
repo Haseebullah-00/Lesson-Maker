@@ -50,6 +50,9 @@ import com.lessonmaker.app.shared.textkit.ui.state.rememberTextKitState
 import org.jetbrains.compose.resources.stringResource
 import lessonmaker.composeapp.generated.resources.Res
 import lessonmaker.composeapp.generated.resources.type_text
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun TextKitEditor(
@@ -207,7 +210,7 @@ fun TextKitEditorOutlined(
         interactionSource = interactionSource,
         enabled = enabled,
         singleLine = singleLine,
-        textStyle = TextStyle(color = TextKitTheme.colors.onSurface),
+        textStyle = textKitEditorTextStyle(),
         cursorBrush = SolidColor(TextKitTheme.colors.primary),
         decorationBox = { innerTextField ->
             // Propagate the incoming minimum constraints: when the caller sizes the editor
@@ -257,3 +260,11 @@ fun TextKitEditorOutlined(
         }
     )
 }
+@Composable
+private fun textKitEditorTextStyle(): TextStyle = TextStyle(
+    color = TextKitTheme.colors.onSurface,
+    fontSize = 16.sp,
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.Normal,
+    letterSpacing = 0.sp,
+)

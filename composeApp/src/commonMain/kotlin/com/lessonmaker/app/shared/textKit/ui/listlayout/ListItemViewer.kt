@@ -44,6 +44,8 @@ import com.lessonmaker.app.shared.textkit.editor.core.piecetable.models.TextDeco
 import com.lessonmaker.app.shared.textkit.editor.core.transactions.models.TextEditorItem
 import com.lessonmaker.app.shared.textkit.editor.core.transactions.models.TextEditorParagraph
 import com.lessonmaker.app.shared.textkit.theme.TextKitTheme
+import com.lessonmaker.app.shared.textkit.editor.core.parser.embedImageHeightOf
+import com.lessonmaker.app.shared.textkit.editor.core.parser.embedImageWidthOf
 
 internal sealed interface ViewerBlock {
     data class ListItem(
@@ -53,7 +55,8 @@ internal sealed interface ViewerBlock {
         val textAlign: TextKitTextAlign,
     ) : ViewerBlock
 
-    data class Image(val url: String) : ViewerBlock
+   // data class Image(val url: String) : ViewerBlock
+   data class Image(val url: String, val widthDp: Int? = null, val heightDp: Int? = null) : ViewerBlock
 
     data class Paragraph(
         val text: AnnotatedString,
@@ -70,9 +73,13 @@ internal fun buildViewerBlocks(
         includeDecorator: Boolean,
     ) -> Pair<AnnotatedString, Map<String, InlineTextContent>>,
 ): List<ViewerBlock> = paragraphs.map { paragraph ->
-    val imageUrl = paragraph.imageEmbedChild()?.embedPayload?.let { embedUrlOf(it) }
+//    val imageUrl = paragraph.imageEmbedChild()?.embedPayload?.let { embedUrlOf(it) }
+//    if (imageUrl != null) {
+//        ViewerBlock.Image(imageUrl)
+    val imagePayload = paragraph.imageEmbedChild()?.embedPayload
+    val imageUrl = imagePayload?.let { embedUrlOf(it) }
     if (imageUrl != null) {
-        ViewerBlock.Image(imageUrl)
+        ViewerBlock.Image(imageUrl, embedImageWidthOf(imagePayload), embedImageHeightOf(imagePayload))
     } else if (paragraph.usesSplitListLayout()) {
         val gutter = paragraph.listDecoratorChild()?.decorator
             ?: error("split list layout requires a decorator")
@@ -117,7 +124,8 @@ internal fun TextKitViewerBlocks(
                     markerColumnWidth = markerColumnWidth,
                 )
 
-                is ViewerBlock.Image -> ViewerImageBlock(block.url)
+             //   is ViewerBlock.Image -> ViewerImageBlock(block.url)
+                is ViewerBlock.Image -> ViewerImageBlock(block.url, block.widthDp, block.heightDp)
 
                 is ViewerBlock.Paragraph -> if (block.quoted) {
                     // Quoted paragraph: accent bar + indent, the blockquote's visual treatment.

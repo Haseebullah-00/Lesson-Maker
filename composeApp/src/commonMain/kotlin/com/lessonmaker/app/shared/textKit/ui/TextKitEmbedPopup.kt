@@ -51,6 +51,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import coil3.compose.SubcomposeAsyncImage
+import com.lessonmaker.app.shared.textKit.ui.ImageSizeControls
 import com.lessonmaker.app.shared.textkit.editor.core.TextKitEditorManager
 import com.lessonmaker.app.shared.textkit.editor.core.parser.EmbedTypes
 import com.lessonmaker.app.shared.textkit.editor.core.parser.embedCodeTextOf
@@ -214,8 +215,12 @@ private fun EmbedPopupContent(
                     // View-only (#127): the node's attrs.url is the content's source. While it
                     // loads a spinner holds the space; a missing or failing url falls back to the
                     // banner so the popup never renders empty.
-                    EmbedTypes.Image -> {
+//                    EmbedTypes.Image -> {
+//                        val url = remember(embed.rawJson) { embedUrlOf(embed.rawJson) }
+//                        if (url == null) {
+                    EmbedTypes.Image -> Column {
                         val url = remember(embed.rawJson) { embedUrlOf(embed.rawJson) }
+                        ImageSizeControls(embed.rawJson, onSync)
                         if (url == null) {
                             Image(
                                 painter = painterResource(Res.drawable.text_kit_banner),

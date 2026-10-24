@@ -87,6 +87,12 @@ private val sampleCommands = listOf(
     TextKitCommand.custom(id = "cmd-date", label = "Insert date") { it.insertText("2026-07-15") },
 )
 
+
+
+private fun printLong(label: String, text: String) {
+    println("----- $label (${text.length} chars) -----")
+    text.chunked(3000).forEach { println(it) }
+}
 /** Reads every image url out of toJson(), in document order. */
 fun extractImageUrls(json: String): List<String> {
     val key = "\"type\":\"image\",\"attrs\":{\"url\":\""
@@ -192,12 +198,11 @@ fun TeacherAddLessonScreenFLow(
 
             Button(
                 onClick = {
-                    println("========== TEXTKIT EDITOR DATA ==========")
-                    println("----- JSON -----")
-                    println(state.toJson())
-                    println("----- HTML -----")
 
-                   println(state.toHtml())
+                       // printLong("JSON", state.toJson())
+                    println("--------  HTML -----------")
+                    println(state.toHtml().replace(Regex("data:image/[^\"]+"), "data:image/..."))
+
 
 
                 },
@@ -222,17 +227,17 @@ fun TeacherAddLessonScreenFLow(
                 TextKitEmbedPopup(state = state)
                 TextKitColorsPopup(state = state, colors = barState.colors)
                 TextKitAlignPopup(state = state)
-                TextKitLinkPopup(
-                    state = state,
-                    onEdit = { link ->
-                        state.updateLinkText(
-                            newText = link.text,
-                            url = link.url,
-                            range = link.range
-                        )
-                    },
-                    onRemove = { link -> state.removeLink(link.range) },
-                )
+//                TextKitLinkPopup(
+//                    state = state,
+//                    onEdit = { link ->
+//                        state.updateLinkText(
+//                            newText = link.text,
+//                            url = link.url,
+//                            range = link.range
+//                        )
+//                    },
+//                    onRemove = { link -> state.removeLink(link.range) },
+//                )
                 TextKitTokenPopup(state = state) { trigger ->
                     when (trigger) {
                         is TextKitTrigger.TextKitHashtagTrigger -> sampleTags

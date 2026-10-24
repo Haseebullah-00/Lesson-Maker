@@ -451,7 +451,11 @@ internal class HtmlParser {
 
     /** An `<img>`: a safe `src` becomes the image embed; an unsafe one degrades to the alt text. */
     private fun imageBlock(img: Element): List<BaseParagraph> {
-        val src = img.attrs["src"]?.let { ExportHtml.safeHref(it) }
+       // val src = img.attrs["src"]?.let { ExportHtml.safeHref(it) }
+        val src = img.attrs["src"]?.let { raw ->
+            if (raw.trim().startsWith("data:image/", ignoreCase = true)) raw.trim()
+            else ExportHtml.safeHref(raw)
+        }
         if (src == null) {
             val alt = img.attrs["alt"].orEmpty()
             return if (alt.isBlank()) emptyList()
@@ -460,8 +464,13 @@ internal class HtmlParser {
         val raw = buildJsonObject {
             put("type", EmbedTypes.Image)
             put("attrs", buildJsonObject {
-                put("src", src)
+               // put("src", src)
+               // put("alt", img.attrs["alt"].orEmpty())
+                put("url", src)
                 put("alt", img.attrs["alt"].orEmpty())
+                img.attrs["width"]?.toIntOrNull()?.let { put("width", it) }
+                img.attrs["height"]?.toIntOrNull()?.let { put("height", it) }
+
             })
         }
         return listOf(EmbedBlock(embedType = EmbedTypes.Image, id = EmbedTypes.Image, raw = raw))

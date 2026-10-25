@@ -465,11 +465,15 @@ internal class HtmlSerializer : DocumentSerializer {
         val src = (attrs?.get(Attr.Src) ?: attrs?.get("url"))?.jsonPrimitive?.contentOrNull.orEmpty()
         val alt = attrs?.get(Attr.Alt)?.jsonPrimitive?.contentOrNull.orEmpty()
         val width = attrs?.get("width")?.jsonPrimitive?.intOrNull
+
         // width = the size the author picked; max-width:100% lets it shrink on small screens.
         val height = attrs?.get("height")?.jsonPrimitive?.intOrNull
         val widthAttr = width?.let { attr("width", it.toString()) }.orEmpty()
         val heightAttr = height?.let { attr("height", it.toString()) }.orEmpty()
         val ratio = if (width != null && height != null && height > 0) ";aspect-ratio:$width/$height;object-fit:fill" else ""
+        val imageId = attrs?.get("imageId")?.jsonPrimitive?.intOrNull
+        val imageIdAttr = imageId?.let { attr(Attr.DataImageId, it.toString()) }.orEmpty()
+        return "<${Tag.Image}${attr(Attr.Src, ExportHtml.escapeAttribute(src))}$imageIdAttr${attr(Attr.Alt, ExportHtml.escapeAttribute(alt))}$widthAttr$heightAttr${attr(Attr.Style, "max-width:100%;height:auto$ratio")}>"
         return "<${Tag.Image}${attr(Attr.Src, ExportHtml.escapeAttribute(src))}${attr(Attr.Alt, ExportHtml.escapeAttribute(alt))}$widthAttr$heightAttr${attr(Attr.Style, "max-width:100%;height:auto$ratio")}>"
     }
 
@@ -632,6 +636,8 @@ internal class HtmlSerializer : DocumentSerializer {
         const val Alt = "alt"
         const val Type = "type"
         const val Checked = "checked"
+
+        const val DataImageId = "data-image-id"
     }
 
     private companion object {

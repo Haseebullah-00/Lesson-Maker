@@ -1,10 +1,16 @@
 package com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.addLesson
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -19,7 +25,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.lessonmaker.app.common.MainButtonNew
 import com.lessonmaker.app.common.dialogue.MediaPickerInterface
 import com.lessonmaker.app.common.dialogue.MediaSourcePicker
 import com.lessonmaker.app.common.lesson.imageEmbedJson
@@ -31,6 +39,7 @@ import com.lessonmaker.app.shared.textkit.editor.core.parser.EmbedTypes
 import com.lessonmaker.app.shared.textkit.editor.models.TextKitTrigger
 import com.lessonmaker.app.shared.textkit.editor.models.createTextKitConfiguration
 import com.lessonmaker.app.shared.textkit.editor.utils.DocumentUtils
+import com.lessonmaker.app.shared.textkit.theme.TextKitTheme
 import com.lessonmaker.app.shared.textkit.ui.TextKitAlignPopup
 import com.lessonmaker.app.shared.textkit.ui.TextKitColorsPopup
 import com.lessonmaker.app.shared.textkit.ui.TextKitEditor
@@ -45,6 +54,8 @@ import com.lessonmaker.app.shared.textkit.ui.model.TextKitTokenSuggestion
 import com.lessonmaker.app.shared.textkit.ui.state.rememberTextKitFormattingBarState
 import com.lessonmaker.app.shared.textkit.ui.state.rememberTextKitState
 import com.lessonmaker.app.shared.textkit.ui.utils.TextKitPickerPallete
+import com.lessonmaker.app.theme.White
+import com.lessonmaker.app.theme.greyE3
 import kotlinx.coroutines.launch
 
 private val DEMO_TABLE_JSON = """
@@ -155,21 +166,114 @@ fun TeacherAddLessonScreenFLow(
         barState.syncFrom(state.lastMarks, state.lastListItem, state.lastEmbedType)
     }
 
+    val density = LocalDensity.current
+    var bottomBarHeight by remember { mutableStateOf(0.dp) }
+    val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+    val editorBottomPadding = maxOf(imeBottom, bottomBarHeight)
     // ---- Your picker: stays invisible until showImagePicker = true ----
 
 
+//
+//    TextKitScreen(
+//        modifier = Modifier
+//            .fillMaxSize()
+//
+//            .padding(16.dp),
+//        darkTheme = false
+//    ) {
+//        Column(
+//            modifier = Modifier.fillMaxSize()
+//        ) {
+//            TextKitFormattingBar(
+//                barState = barState,
+//                onBoldClick = state::applyBold,
+//                onItalicClick = state::applyItalic,
+//                onUnderlineClick = state::applyUnderline,
+//                onStrikeThroughClick = state::applyStrikeThrough,
+//                onHighlightClick = state::applyHighlight,
+//                onLinkClick = { state.applyLink() },
+//                onImageClick = { showPicker = true },      // opens your picker
+//                onTableClick = {
+//                    state.insertEmbed(EmbedTypes.Table, DEMO_TABLE_JSON, "📊 Tabla")
+//                },
+//                onDocumentClick = {
+//                    state.insertEmbed(EmbedTypes.Document, DEMO_DOCUMENT_JSON, "📄 Documento")
+//                },
+//                onTextAndColorClick = { state.openColorPicker(it) },
+//                onOrderedListClick = state::toggleOrderedList,
+//                onBulletedListClick = state::toggleUnorderedList,
+//                onBlockquoteClick = { state.applyBlockquote() },
+//                isBlockquoteActive = state.isBlockquoteActive,
+//                onTextAlignClick = { state.openAlignPicker(it) },
+//                onUndoClick = { state.undo() },
+//                onRedoClick = { state.redo() },
+//                canUndo = state.canUndo,
+//                canRedo = state.canRedo
+//            )
+//
+//            Button(
+//                onClick = {
+//
+//                       // printLong("JSON", state.toJson())
+//                    println("--------  HTML -----------")
+//                    println(state.toHtml().replace(Regex("data:image/[^\"]+"), "data:image/..."))
+//
+//
+//
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                Text("Print Editor Data")
+//            }
+//
+//            Spacer(Modifier.size(6.dp))
+//
+//            Box(modifier = Modifier
+//                .weight(1f)
+//
+//            ) {
+//                TextKitEditor(
+//                    state = state,
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(10.dp)
+//                )
+//                // Tap the image -> popup (with Remove)
+//                TextKitEmbedPopup(state = state)
+//                TextKitColorsPopup(state = state, colors = barState.colors)
+//                TextKitAlignPopup(state = state)
+////                TextKitLinkPopup(
+////                    state = state,
+////                    onEdit = { link ->
+////                        state.updateLinkText(
+////                            newText = link.text,
+////                            url = link.url,
+////                            range = link.range
+////                        )
+////                    },
+////                    onRemove = { link -> state.removeLink(link.range) },
+////                )
+//                TextKitTokenPopup(state = state) { trigger ->
+//                    when (trigger) {
+//                        is TextKitTrigger.TextKitHashtagTrigger -> sampleTags
+//                        else -> sampleUsers
+//                    }
+//                }
+//                TextKitSlashCommandPopup(state = state, commands = sampleCommands)
+//
+//                if (isUploading) {
+//                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+//                }
+//            }
+//        }
+//    }
 
-    TextKitScreen(
-        modifier = Modifier
-            .fillMaxSize()
-
-            .padding(16.dp),
-        darkTheme = false
-    ) {
+    TextKitTheme(darkTheme = false) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().background(White).imePadding()
         ) {
             TextKitFormattingBar(
+
                 barState = barState,
                 onBoldClick = state::applyBold,
                 onItalicClick = state::applyItalic,
@@ -177,14 +281,11 @@ fun TeacherAddLessonScreenFLow(
                 onStrikeThroughClick = state::applyStrikeThrough,
                 onHighlightClick = state::applyHighlight,
                 onLinkClick = { state.applyLink() },
-                onImageClick = { showPicker = true },      // opens your picker
-                onTableClick = {
-                    state.insertEmbed(EmbedTypes.Table, DEMO_TABLE_JSON, "📊 Tabla")
-                },
-                onDocumentClick = {
-                    state.insertEmbed(EmbedTypes.Document, DEMO_DOCUMENT_JSON, "📄 Documento")
-                },
+                onImageClick = { showPicker = true },
+                onTableClick = { state.insertEmbed(EmbedTypes.Table, DEMO_TABLE_JSON, "📊 Tabla") },
+                onDocumentClick = { state.insertEmbed(EmbedTypes.Document, DEMO_DOCUMENT_JSON, "📄 Documento") },
                 onTextAndColorClick = { state.openColorPicker(it) },
+                onHeadingClick = { level, selected -> state.applyHeading(if (selected) level else 0) },
                 onOrderedListClick = state::toggleOrderedList,
                 onBulletedListClick = state::toggleUnorderedList,
                 onBlockquoteClick = { state.applyBlockquote() },
@@ -196,48 +297,21 @@ fun TeacherAddLessonScreenFLow(
                 canRedo = state.canRedo
             )
 
-            Button(
-                onClick = {
-
-                       // printLong("JSON", state.toJson())
-                    println("--------  HTML -----------")
-                    println(state.toHtml().replace(Regex("data:image/[^\"]+"), "data:image/..."))
-
-
-
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Print Editor Data")
-            }
-
-            Spacer(Modifier.size(6.dp))
-
-            Box(modifier = Modifier
-                .weight(1f)
-
-            ) {
+            Box(modifier = Modifier.weight(1f)) {
                 TextKitEditor(
                     state = state,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp)
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 16.dp)
                 )
-                // Tap the image -> popup (with Remove)
                 TextKitEmbedPopup(state = state)
                 TextKitColorsPopup(state = state, colors = barState.colors)
                 TextKitAlignPopup(state = state)
-//                TextKitLinkPopup(
-//                    state = state,
-//                    onEdit = { link ->
-//                        state.updateLinkText(
-//                            newText = link.text,
-//                            url = link.url,
-//                            range = link.range
-//                        )
-//                    },
-//                    onRemove = { link -> state.removeLink(link.range) },
-//                )
+                TextKitLinkPopup(
+                    state = state,
+                    onEdit = { link ->
+                        state.updateLinkText(newText = link.text, url = link.url, range = link.range)
+                    },
+                    onRemove = { link -> state.removeLink(link.range) },
+                )
                 TextKitTokenPopup(state = state) { trigger ->
                     when (trigger) {
                         is TextKitTrigger.TextKitHashtagTrigger -> sampleTags
@@ -245,9 +319,18 @@ fun TeacherAddLessonScreenFLow(
                     }
                 }
                 TextKitSlashCommandPopup(state = state, commands = sampleCommands)
-
                 if (isUploading) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
+                }
+            }
+
+            Column(modifier = Modifier.fillMaxWidth().background(White)) {
+                Box(Modifier.fillMaxWidth().height(1.dp).background(greyE3))
+                Box(modifier = Modifier.padding(16.dp)) {
+                    MainButtonNew(heading = "Save Lecture Note") {
+                        println("--------  HTML -----------")
+                        println(state.toHtml().replace(Regex("data:image/[^\"]+"), "data:image/..."))
+                    }
                 }
             }
         }

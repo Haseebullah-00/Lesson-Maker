@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.TextUnitType
 import com.lessonmaker.app.shared.textkit.editor.core.parser.BoldMark
 
 import com.lessonmaker.app.shared.textkit.editor.core.parser.EmbedTokenType
+import com.lessonmaker.app.shared.textkit.editor.core.parser.HeadingLevelsValues
 import com.lessonmaker.app.shared.textkit.editor.core.parser.HighlightMark
 import com.lessonmaker.app.shared.textkit.editor.core.parser.ItalicMark
 import com.lessonmaker.app.shared.textkit.editor.core.parser.LinkMark
@@ -75,8 +76,15 @@ private fun TextEditorItem.createColorSpanStyle(linkColor: Color): Color {
     }
 }
 
-private fun TextEditorItem.createBoldSpanStyle() =
-    if (marks.any { it is BoldMark }) FontWeight.Bold else null
+//private fun TextEditorItem.createBoldSpanStyle() =
+//    if (marks.any { it is BoldMark }) FontWeight.Bold else null
+
+private fun TextEditorItem.createBoldSpanStyle(): FontWeight? {
+    if (marks.any { it is BoldMark }) return FontWeight.Bold
+    val size = marks.filterIsInstance<TextStyleMark>().firstOrNull()?.attrs?.fontSize
+    return if (size == HeadingLevelsValues.H1 || size == HeadingLevelsValues.H2 || size == HeadingLevelsValues.H3)
+        FontWeight.SemiBold else null
+}
 
 private fun TextEditorItem.createItalicSpanStyle() =
     if (marks.any { it is ItalicMark }) FontStyle.Italic else null

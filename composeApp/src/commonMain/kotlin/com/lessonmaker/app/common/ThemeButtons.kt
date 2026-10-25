@@ -19,11 +19,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
@@ -32,13 +34,19 @@ import androidx.compose.ui.unit.dp
 import com.lessonmaker.app.theme.ButtonBackgroundColor
 import com.lessonmaker.app.theme.Medium
 import com.lessonmaker.app.theme.PrimaryColor
+import com.lessonmaker.app.theme.TextSize13
 import com.lessonmaker.app.theme.TextSize16
 import com.lessonmaker.app.theme.TextSize17
 import com.lessonmaker.app.theme.TextSize18
+import com.lessonmaker.app.theme.bgColor
 import com.lessonmaker.app.theme.bold
+import com.lessonmaker.app.theme.deleteBtnBg
+import com.lessonmaker.app.theme.deleteBtnText
+import com.lessonmaker.app.theme.fieldBorder
 import com.lessonmaker.app.theme.fieldCursor
 import com.lessonmaker.app.theme.secondaryColor
 import com.lessonmaker.app.theme.semiBold
+import org.jetbrains.compose.resources.DrawableResource
 
 
 import org.jetbrains.compose.resources.painterResource
@@ -123,7 +131,71 @@ fun MainButton(
 
 
 }
+enum class ActionButtonStyle {
+    /** Blue filled (Accept / Approve / Review) */
+    Primary,
 
+    /** Light red filled (Reject / Logout) */
+    Danger,
+
+    /** White with border (Later / Edit Profile) */
+    Outline
+}
+@Composable
+fun TeacherActionButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: ActionButtonStyle = ActionButtonStyle.Primary,
+    height: Dp = 36.dp,
+    icon: DrawableResource? = null,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(8.dp)
+    val bg = when (style) {
+        ActionButtonStyle.Primary -> fieldCursor
+        ActionButtonStyle.Danger -> deleteBtnBg
+        ActionButtonStyle.Outline -> White
+    }
+    val contentColor = when (style) {
+        ActionButtonStyle.Primary -> White
+        ActionButtonStyle.Danger -> deleteBtnText
+        ActionButtonStyle.Outline -> bgColor
+    }
+
+    Box(
+        modifier = modifier
+            .height(height)
+            .clip(shape)
+            .background(bg, shape)
+            .then(
+                if (style == ActionButtonStyle.Outline) Modifier.border(1.dp, fieldBorder, shape)
+                else Modifier
+            )
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                Image(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    colorFilter = ColorFilter.tint(contentColor)
+                )
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(
+                text = text,
+                color = contentColor,
+                style = TextSize13().semiBold()
+            )
+        }
+    }
+}
 
 @Composable
 fun MainButtonNew(

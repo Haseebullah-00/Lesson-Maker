@@ -88,6 +88,11 @@ import lessonmaker.composeapp.generated.resources.text_color_text
 import lessonmaker.composeapp.generated.resources.underline_text
 import lessonmaker.composeapp.generated.resources.undo_text
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.draw.clip
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitButtonStyle
+
 
 
 @Composable
@@ -111,7 +116,6 @@ fun TextKitScreen(
         }
     }
 }
-
 @Composable
 fun TextKitFormattingBar(
     modifier: Modifier = Modifier,
@@ -131,40 +135,31 @@ fun TextKitFormattingBar(
     isBlockquoteActive: Boolean = false,
     onTextAlignClick: (Rect) -> Unit = {},
     onTextAndColorClick: (Rect) -> Unit = {},
+    onHeadingClick: (level: Int, selected: Boolean) -> Unit = { _, _ -> },
     onUndoClick: () -> Unit = {},
     onRedoClick: () -> Unit = {},
     canUndo: Boolean = false,
     canRedo: Boolean = false
 ) {
     TextKitFormattingBarInternal(
-        modifier = modifier,
-        barState = barState,
-        onBoldClick = onBoldClick,
-        onItalicClick = onItalicClick,
-        onUnderlineClick = onUnderlineClick,
-        onStrikeThroughClick = onStrikeThroughClick,
-        onHighlightClick = onHighlightClick,
-        onSizeAndColorClick = onTextAndColorClick,
-        onLinkClick = onLinkClick,
-        onImageClick = onImageClick,
-        onTableClick = onTableClick,
-        onDocumentClick = onDocumentClick,
-        onOrderedListClick = onOrderedListClick,
-        onBulletedListClick = onBulletedListClick,
-        onBlockquoteClick = onBlockquoteClick,
-        isBlockquoteActive = isBlockquoteActive,
-        onTextAlignClick = onTextAlignClick,
-        onUndoClick = onUndoClick,
-        onRedoClick = onRedoClick,
-        canUndo = canUndo,
-        canRedo = canRedo
+        modifier = modifier, barState = barState,
+        onBoldClick = onBoldClick, onItalicClick = onItalicClick,
+        onUnderlineClick = onUnderlineClick, onStrikeThroughClick = onStrikeThroughClick,
+        onHighlightClick = onHighlightClick, onSizeAndColorClick = onTextAndColorClick,
+        onLinkClick = onLinkClick, onImageClick = onImageClick,
+        onTableClick = onTableClick, onDocumentClick = onDocumentClick,
+        onOrderedListClick = onOrderedListClick, onBulletedListClick = onBulletedListClick,
+        onBlockquoteClick = onBlockquoteClick, isBlockquoteActive = isBlockquoteActive,
+        onTextAlignClick = onTextAlignClick, onHeadingClick = onHeadingClick,
+        onUndoClick = onUndoClick, onRedoClick = onRedoClick,
+        canUndo = canUndo, canRedo = canRedo
     )
 }
 
 @Composable
 fun TextKitFormattingBarInternal(
     modifier: Modifier = Modifier,
-    selectedColor: Color = TextKitTheme.colors.primary.copy(alpha = 0.45f),
+    selectedColor: Color = TextKitTheme.colors.primaryContainer,
     barState: TextKitFormattingBarState = rememberTextKitFormattingBarState(),
     onBoldClick: (Boolean) -> Unit = {},
     onItalicClick: (Boolean) -> Unit = {},
@@ -181,6 +176,7 @@ fun TextKitFormattingBarInternal(
     onBlockquoteClick: (Boolean) -> Unit = {},
     isBlockquoteActive: Boolean = false,
     onTextAlignClick: (Rect) -> Unit = {},
+    onHeadingClick: (level: Int, selected: Boolean) -> Unit = { _, _ -> },
     onUndoClick: () -> Unit = {},
     onRedoClick: () -> Unit = {},
     canUndo: Boolean = false,
@@ -189,160 +185,142 @@ fun TextKitFormattingBarInternal(
     var textSizeAndColorBounds by remember { mutableStateOf(Rect.Zero) }
     var textAlignBounds by remember { mutableStateOf(Rect.Zero) }
 
-    Card(
-        modifier = modifier.padding(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = TextKitTheme.colors.surface,
-            contentColor = TextKitTheme.colors.onSurface
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
-    ) {
+    Column(modifier = modifier.fillMaxWidth().background(TextKitTheme.colors.surface)) {
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .height(IntrinsicSize.Min)
-                .padding(horizontal = 4.dp, vertical = 4.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.bold_text),
-                rememberVectorPainter(Icons.Rounded.FormatBold),
-                onClick = onBoldClick,
-                value = barState.isBold,
-                backgroundColor = selectedColor
+                painter = rememberVectorPainter(Icons.Rounded.FormatBold),
+                onClick = onBoldClick, value = barState.isBold, backgroundColor = selectedColor
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.italic_text),
-                rememberVectorPainter(Icons.Rounded.FormatItalic),
-                onClick = onItalicClick,
-                value = barState.isItalic,
-                backgroundColor = selectedColor
+                painter = rememberVectorPainter(Icons.Rounded.FormatItalic),
+                onClick = onItalicClick, value = barState.isItalic, backgroundColor = selectedColor
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.underline_text),
                 painter = rememberVectorPainter(Icons.Rounded.FormatUnderlined),
-                onClick = onUnderlineClick,
-                value = barState.isUnderline,
-                backgroundColor = selectedColor
+                onClick = onUnderlineClick, value = barState.isUnderline, backgroundColor = selectedColor
+            )
+            TextKitFormattingSeparator()
+            TextKitTooltipTextItem(
+                tooltipText = "Heading 1", label = "H1",
+                value = barState.headingLevel == 1,
+                onClick = { onHeadingClick(1, it) }, backgroundColor = selectedColor
+            )
+            TextKitFormattingSeparator()
+            TextKitTooltipTextItem(
+                tooltipText = "Heading 2", label = "H2",
+                value = barState.headingLevel == 2,
+                onClick = { onHeadingClick(2, it) }, backgroundColor = selectedColor
+            )
+            TextKitFormattingSeparator()
+            TextKitTooltipTextItem(
+                tooltipText = "Heading 3", label = "H3",
+                value = barState.headingLevel == 3,
+                onClick = { onHeadingClick(3, it) }, backgroundColor = selectedColor
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
-                tooltipText = stringResource(Res.string.strikethrough_text),
-                painter = rememberVectorPainter(Icons.Rounded.FormatStrikethrough),
-                onClick = onStrikeThroughClick,
-                value = barState.isStrikethrough,
-                backgroundColor = selectedColor
+                tooltipText = stringResource(Res.string.image_text),
+                painter = rememberVectorPainter(Icons.Outlined.Image),
+                value = barState.isImage, onClick = onImageClick, backgroundColor = selectedColor
             )
-            TextKitFormattingSeparator()
-            TextKitTooltipFormattingItem(
-                tooltipText = stringResource(Res.string.highlight_text),
-                painter = rememberVectorPainter(Icons.Rounded.FormatColorFill),
-                onClick = onHighlightClick,
-                value = barState.isHighlight,
-                backgroundColor = selectedColor
-            )
-            TextKitFormattingSeparator()
-            TextKitTooltipFormattingItem(
-                tooltipText = stringResource(Res.string.text_color_text),
-                painter = rememberVectorPainter(Icons.Outlined.Palette),
-                value = false,
-                isExpandable = true,
-                onClick = { onSizeAndColorClick(textSizeAndColorBounds) },
-                modifier = Modifier.onGloballyPositioned {
-                    textSizeAndColorBounds = it.boundsInWindow()
-                }
-            )
-            TextKitFormattingDivider()
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.link_text),
                 painter = rememberVectorPainter(Icons.Rounded.Link),
-                onClick = onLinkClick,
-                value = barState.isLink,
-                backgroundColor = selectedColor
-            )
-            TextKitFormattingSeparator()
-            TextKitTooltipFormattingItem(
-                tooltipText = stringResource(Res.string.ordered_list_text),
-                painter = rememberVectorPainter(Icons.Rounded.FormatListNumbered),
-                onClick = onOrderedListClick,
-                value = barState.isNumberedList,
-                backgroundColor = selectedColor
+                onClick = onLinkClick, value = barState.isLink, backgroundColor = selectedColor
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.bulleted_list_text),
                 painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.FormatListBulleted),
-                onClick = onBulletedListClick,
-                value = barState.isBulletedList,
-                backgroundColor = selectedColor
+                onClick = onBulletedListClick, value = barState.isBulletedList, backgroundColor = selectedColor
+            )
+            TextKitFormattingSeparator()
+            TextKitFormattingDivider()
+            TextKitFormattingSeparator()
+            TextKitTooltipFormattingItem(
+                tooltipText = stringResource(Res.string.ordered_list_text),
+                painter = rememberVectorPainter(Icons.Rounded.FormatListNumbered),
+                onClick = onOrderedListClick, value = barState.isNumberedList, backgroundColor = selectedColor
+            )
+            TextKitFormattingSeparator()
+            TextKitTooltipFormattingItem(
+                tooltipText = stringResource(Res.string.strikethrough_text),
+                painter = rememberVectorPainter(Icons.Rounded.FormatStrikethrough),
+                onClick = onStrikeThroughClick, value = barState.isStrikethrough, backgroundColor = selectedColor
+            )
+            TextKitFormattingSeparator()
+            TextKitTooltipFormattingItem(
+                tooltipText = stringResource(Res.string.highlight_text),
+                painter = rememberVectorPainter(Icons.Rounded.FormatColorFill),
+                onClick = onHighlightClick, value = barState.isHighlight, backgroundColor = selectedColor
+            )
+            TextKitFormattingSeparator()
+            TextKitTooltipFormattingItem(
+                tooltipText = stringResource(Res.string.text_color_text),
+                painter = rememberVectorPainter(Icons.Outlined.Palette),
+                value = false, isExpandable = true,
+                onClick = { onSizeAndColorClick(textSizeAndColorBounds) },
+                modifier = Modifier.onGloballyPositioned { textSizeAndColorBounds = it.boundsInWindow() }
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.blockquote_text),
                 painter = rememberVectorPainter(Icons.Rounded.FormatQuote),
-                onClick = onBlockquoteClick,
-                value = isBlockquoteActive,
-                backgroundColor = selectedColor
+                onClick = onBlockquoteClick, value = isBlockquoteActive, backgroundColor = selectedColor
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.align_text),
                 painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.FormatAlignLeft),
-                value = false,
-                isExpandable = true,
+                value = false, isExpandable = true,
                 onClick = { onTextAlignClick(textAlignBounds) },
-                modifier = Modifier.onGloballyPositioned {
-                    textAlignBounds = it.boundsInWindow()
-                }
+                modifier = Modifier.onGloballyPositioned { textAlignBounds = it.boundsInWindow() }
             )
             TextKitFormattingSeparator()
             TextKitFormattingDivider()
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
-                tooltipText = stringResource(Res.string.image_text),
-                painter = rememberVectorPainter(Icons.Outlined.Image),
-                value = barState.isImage,
-                onClick = onImageClick,
-                backgroundColor = selectedColor
-            )
-            TextKitFormattingSeparator()
-            TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.table_text),
                 painter = rememberVectorPainter(Icons.Outlined.TableChart),
-                value = barState.isTable,
-                onClick = onTableClick,
-                backgroundColor = selectedColor
+                value = barState.isTable, onClick = onTableClick, backgroundColor = selectedColor
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.document_text),
                 painter = rememberVectorPainter(Icons.AutoMirrored.Outlined.Article),
-                value = barState.isDocument,
-                onClick = onDocumentClick,
-                backgroundColor = selectedColor
+                value = barState.isDocument, onClick = onDocumentClick, backgroundColor = selectedColor
             )
             TextKitFormattingSeparator()
             TextKitFormattingDivider()
+            TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.undo_text),
                 painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.Undo),
-                onClick = { onUndoClick() },
-                value = false,
-                backgroundColor = selectedColor,
-                enabled = canUndo
+                onClick = { onUndoClick() }, value = false,
+                backgroundColor = selectedColor, enabled = canUndo
             )
             TextKitFormattingSeparator()
             TextKitTooltipFormattingItem(
                 tooltipText = stringResource(Res.string.redo_text),
                 painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.Redo),
-                onClick = { onRedoClick() },
-                value = false,
-                backgroundColor = selectedColor,
-                enabled = canRedo
+                onClick = { onRedoClick() }, value = false,
+                backgroundColor = selectedColor, enabled = canRedo
             )
         }
+        HorizontalDivider(color = TextKitTheme.colors.outlineVariant)
     }
 }
 
@@ -354,34 +332,48 @@ fun TextKitTooltipFormattingItem(
     isExpandable: Boolean = false,
     onClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color.Unspecified,
+    backgroundColor: Color = TextKitTheme.colors.primaryContainer,
     enabled: Boolean = true,
 ) {
     TooltipBox(
         modifier = modifier,
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-            TooltipAnchorPosition.Above
-        ),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
         state = rememberTooltipState(),
-        tooltip = {
-            PlainTooltip {
-                Text(tooltipText)
-            }
-        }
+        tooltip = { PlainTooltip { Text(tooltipText) } }
     ) {
-        val indicatorColor =
-            TextKitTheme.colors.secondary.copy(alpha = if (enabled) 1f else 0.38f)
+        val indicatorColor = TextKitTheme.colors.secondary.copy(alpha = if (enabled) 1f else 0.38f)
         Box {
             TextKitFormattingItem(
-                painter = painter,
-                value = value,
-                onValueChange = onClick,
-                backgroundColor = backgroundColor,
-                enabled = enabled
+                painter = painter, value = value, onValueChange = onClick,
+                backgroundColor = backgroundColor, enabled = enabled
             )
-            if (isExpandable) {
-                TextKitItemExpandableIndicator(indicatorColor)
-            }
+            if (isExpandable) TextKitItemExpandableIndicator(indicatorColor)
+        }
+    }
+}
+
+/** Toolbar button whose face is a text label (H1, H2, H3). */
+@Composable
+fun TextKitTooltipTextItem(
+    tooltipText: String,
+    label: String,
+    value: Boolean,
+    onClick: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = TextKitTheme.colors.primaryContainer,
+    enabled: Boolean = true,
+) {
+    TooltipBox(
+        modifier = modifier,
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+        state = rememberTooltipState(),
+        tooltip = { PlainTooltip { Text(tooltipText) } }
+    ) {
+        TextKitFormattingItemBox(
+            value = value, onValueChange = onClick,
+            backgroundColor = backgroundColor, enabled = enabled
+        ) { tint ->
+            Text(text = label, style = textKitButtonStyle().copy(color = tint))
         }
     }
 }
@@ -389,18 +381,14 @@ fun TextKitTooltipFormattingItem(
 @Composable
 private fun BoxScope.TextKitItemExpandableIndicator(indicatorColor: Color) {
     Canvas(
-        modifier = Modifier
-            .padding(2.dp)
-            .size(6.dp)
-            .align(Alignment.BottomEnd)
+        modifier = Modifier.padding(5.dp).size(6.dp).align(Alignment.BottomEnd)
     ) {
         val path = Path().apply {
-            moveTo(size.width, size.height)     // right corner
-            lineTo(0f, size.height)             // lower left
-            lineTo(size.width, 0f)              // upper right
+            moveTo(size.width, size.height)
+            lineTo(0f, size.height)
+            lineTo(size.width, 0f)
             close()
         }
-
         drawPath(path = path, color = indicatorColor)
     }
 }
@@ -411,36 +399,48 @@ fun TextKitFormattingItem(
     value: Boolean,
     onValueChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color.Unspecified,
+    backgroundColor: Color = TextKitTheme.colors.primaryContainer,
     enabled: Boolean = true
 ) {
+    TextKitFormattingItemBox(
+        value = value, onValueChange = onValueChange, modifier = modifier,
+        backgroundColor = backgroundColor, enabled = enabled
+    ) { tint ->
+        Icon(painter = painter, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+    }
+}
+
+@Composable
+private fun TextKitFormattingItemBox(
+    value: Boolean,
+    onValueChange: (Boolean) -> Unit,
+    backgroundColor: Color,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable (tint: Color) -> Unit,
+) {
+    val colors = TextKitTheme.colors
+    val tint = when {
+        !enabled -> colors.onSurface.copy(alpha = 0.38f)
+        value -> colors.primary
+        else -> colors.onSurface
+    }
     Box(
         modifier = modifier
-            // Do not steal focus from the editor: a focusable toolbar button would pull focus off the
-            // BasicTextField on click, collapsing the active selection before the format action runs,
-            // so marks would never reach the selected range.
-            .focusProperties { canFocus = false }
-            // Outer margin so a selected item's highlight rect doesn't touch its neighbors and each
-            // item has breathing room in its normal state.
+            .focusProperties { canFocus = false }   // keep focus in the editor
             .padding(horizontal = 2.dp, vertical = 2.dp)
+            .size(34.dp)
+            .clip(TextKitTheme.shapes.small)
+            .background(color = if (value) backgroundColor else Color.Transparent)
             .toggleable(
                 value = value,
                 onValueChange = onValueChange,
                 enabled = enabled,
                 indication = ripple(bounded = true),
                 interactionSource = remember { MutableInteractionSource() }
-            )
-            .background(
-                color = if (value) backgroundColor else Color.Unspecified,
-                shape = RoundedCornerShape(6.dp)
-            )
-            .padding(8.dp)
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = null
-        )
-    }
+            ),
+        contentAlignment = Alignment.Center
+    ) { content(tint) }
 }
 
 @Composable
@@ -448,42 +448,396 @@ fun TextKitFormattingDivider(
     modifier: Modifier = Modifier,
     color: Color = TextKitTheme.colors.outlineVariant
 ) {
-    VerticalDivider(
-        modifier = modifier.fillMaxHeight().padding(vertical = 4.dp),
-        color = color
-    )
+    VerticalDivider(modifier = modifier.fillMaxHeight().padding(vertical = 6.dp), color = color)
 }
 
 @Composable
-internal fun TextKitFormattingSeparator(
-    modifier: Modifier = Modifier
-) {
-    Spacer(
-        modifier = modifier.size(2.dp)
-    )
+internal fun TextKitFormattingSeparator(modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.size(2.dp))
 }
-
 
 @Preview(showBackground = true)
 @Composable
 private fun TextKitFormattingBarPreview() {
-    TextKitTheme {
+    TextKitTheme(darkTheme = false) {
         TextKitFormattingBar(
             barState = rememberTextKitFormattingBarState(colors = TextKitPickerPallete.DefaultPallete),
         )
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun TextKitFormattingItemPreview() {
-    TextKitTheme {
-        var toggle by remember { mutableStateOf(false) }
-        TextKitFormattingItem(
-            painter = rememberVectorPainter(Icons.Rounded.FormatBold),
-            value = toggle,
-            onValueChange = { toggle = it },
-            backgroundColor = Color.Yellow
-        )
-    }
-}
+//@Composable
+//fun TextKitFormattingBar(
+//    modifier: Modifier = Modifier,
+//    barState: TextKitFormattingBarState = rememberTextKitFormattingBarState(),
+//    onBoldClick: (Boolean) -> Unit = {},
+//    onItalicClick: (Boolean) -> Unit = {},
+//    onUnderlineClick: (Boolean) -> Unit = {},
+//    onStrikeThroughClick: (Boolean) -> Unit = {},
+//    onHighlightClick: (Boolean) -> Unit = {},
+//    onLinkClick: (Boolean) -> Unit = {},
+//    onImageClick: (Boolean) -> Unit = {},
+//    onTableClick: (Boolean) -> Unit = {},
+//    onDocumentClick: (Boolean) -> Unit = {},
+//    onOrderedListClick: (Boolean) -> Unit = {},
+//    onBulletedListClick: (Boolean) -> Unit = {},
+//    onBlockquoteClick: (Boolean) -> Unit = {},
+//    isBlockquoteActive: Boolean = false,
+//    onTextAlignClick: (Rect) -> Unit = {},
+//    onTextAndColorClick: (Rect) -> Unit = {},
+//    onUndoClick: () -> Unit = {},
+//    onRedoClick: () -> Unit = {},
+//    canUndo: Boolean = false,
+//    canRedo: Boolean = false
+//) {
+//    TextKitFormattingBarInternal(
+//        modifier = modifier,
+//        barState = barState,
+//        onBoldClick = onBoldClick,
+//        onItalicClick = onItalicClick,
+//        onUnderlineClick = onUnderlineClick,
+//        onStrikeThroughClick = onStrikeThroughClick,
+//        onHighlightClick = onHighlightClick,
+//        onSizeAndColorClick = onTextAndColorClick,
+//        onLinkClick = onLinkClick,
+//        onImageClick = onImageClick,
+//        onTableClick = onTableClick,
+//        onDocumentClick = onDocumentClick,
+//        onOrderedListClick = onOrderedListClick,
+//        onBulletedListClick = onBulletedListClick,
+//        onBlockquoteClick = onBlockquoteClick,
+//        isBlockquoteActive = isBlockquoteActive,
+//        onTextAlignClick = onTextAlignClick,
+//        onUndoClick = onUndoClick,
+//        onRedoClick = onRedoClick,
+//        canUndo = canUndo,
+//        canRedo = canRedo
+//    )
+//}
+//
+//@Composable
+//fun TextKitFormattingBarInternal(
+//    modifier: Modifier = Modifier,
+//    selectedColor: Color = TextKitTheme.colors.primary.copy(alpha = 0.45f),
+//    barState: TextKitFormattingBarState = rememberTextKitFormattingBarState(),
+//    onBoldClick: (Boolean) -> Unit = {},
+//    onItalicClick: (Boolean) -> Unit = {},
+//    onUnderlineClick: (Boolean) -> Unit = {},
+//    onStrikeThroughClick: (Boolean) -> Unit = {},
+//    onHighlightClick: (Boolean) -> Unit = {},
+//    onSizeAndColorClick: (Rect) -> Unit = {},
+//    onLinkClick: (Boolean) -> Unit = {},
+//    onImageClick: (Boolean) -> Unit = {},
+//    onTableClick: (Boolean) -> Unit = {},
+//    onDocumentClick: (Boolean) -> Unit = {},
+//    onOrderedListClick: (Boolean) -> Unit = {},
+//    onBulletedListClick: (Boolean) -> Unit = {},
+//    onBlockquoteClick: (Boolean) -> Unit = {},
+//    isBlockquoteActive: Boolean = false,
+//    onTextAlignClick: (Rect) -> Unit = {},
+//    onUndoClick: () -> Unit = {},
+//    onRedoClick: () -> Unit = {},
+//    canUndo: Boolean = false,
+//    canRedo: Boolean = false
+//) {
+//    var textSizeAndColorBounds by remember { mutableStateOf(Rect.Zero) }
+//    var textAlignBounds by remember { mutableStateOf(Rect.Zero) }
+//
+//    Card(
+//        modifier = modifier.padding(4.dp),
+//        colors = CardDefaults.cardColors(
+//            containerColor = TextKitTheme.colors.surface,
+//            contentColor = TextKitTheme.colors.onSurface
+//        ),
+//        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .horizontalScroll(rememberScrollState())
+//                .height(IntrinsicSize.Min)
+//                .padding(horizontal = 4.dp, vertical = 4.dp)
+//        ) {
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.bold_text),
+//                rememberVectorPainter(Icons.Rounded.FormatBold),
+//                onClick = onBoldClick,
+//                value = barState.isBold,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.italic_text),
+//                rememberVectorPainter(Icons.Rounded.FormatItalic),
+//                onClick = onItalicClick,
+//                value = barState.isItalic,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.underline_text),
+//                painter = rememberVectorPainter(Icons.Rounded.FormatUnderlined),
+//                onClick = onUnderlineClick,
+//                value = barState.isUnderline,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.strikethrough_text),
+//                painter = rememberVectorPainter(Icons.Rounded.FormatStrikethrough),
+//                onClick = onStrikeThroughClick,
+//                value = barState.isStrikethrough,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.highlight_text),
+//                painter = rememberVectorPainter(Icons.Rounded.FormatColorFill),
+//                onClick = onHighlightClick,
+//                value = barState.isHighlight,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.text_color_text),
+//                painter = rememberVectorPainter(Icons.Outlined.Palette),
+//                value = false,
+//                isExpandable = true,
+//                onClick = { onSizeAndColorClick(textSizeAndColorBounds) },
+//                modifier = Modifier.onGloballyPositioned {
+//                    textSizeAndColorBounds = it.boundsInWindow()
+//                }
+//            )
+//            TextKitFormattingDivider()
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.link_text),
+//                painter = rememberVectorPainter(Icons.Rounded.Link),
+//                onClick = onLinkClick,
+//                value = barState.isLink,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.ordered_list_text),
+//                painter = rememberVectorPainter(Icons.Rounded.FormatListNumbered),
+//                onClick = onOrderedListClick,
+//                value = barState.isNumberedList,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.bulleted_list_text),
+//                painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.FormatListBulleted),
+//                onClick = onBulletedListClick,
+//                value = barState.isBulletedList,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.blockquote_text),
+//                painter = rememberVectorPainter(Icons.Rounded.FormatQuote),
+//                onClick = onBlockquoteClick,
+//                value = isBlockquoteActive,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.align_text),
+//                painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.FormatAlignLeft),
+//                value = false,
+//                isExpandable = true,
+//                onClick = { onTextAlignClick(textAlignBounds) },
+//                modifier = Modifier.onGloballyPositioned {
+//                    textAlignBounds = it.boundsInWindow()
+//                }
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitFormattingDivider()
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.image_text),
+//                painter = rememberVectorPainter(Icons.Outlined.Image),
+//                value = barState.isImage,
+//                onClick = onImageClick,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.table_text),
+//                painter = rememberVectorPainter(Icons.Outlined.TableChart),
+//                value = barState.isTable,
+//                onClick = onTableClick,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.document_text),
+//                painter = rememberVectorPainter(Icons.AutoMirrored.Outlined.Article),
+//                value = barState.isDocument,
+//                onClick = onDocumentClick,
+//                backgroundColor = selectedColor
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitFormattingDivider()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.undo_text),
+//                painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.Undo),
+//                onClick = { onUndoClick() },
+//                value = false,
+//                backgroundColor = selectedColor,
+//                enabled = canUndo
+//            )
+//            TextKitFormattingSeparator()
+//            TextKitTooltipFormattingItem(
+//                tooltipText = stringResource(Res.string.redo_text),
+//                painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.Redo),
+//                onClick = { onRedoClick() },
+//                value = false,
+//                backgroundColor = selectedColor,
+//                enabled = canRedo
+//            )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun TextKitTooltipFormattingItem(
+//    tooltipText: String,
+//    painter: Painter,
+//    value: Boolean,
+//    isExpandable: Boolean = false,
+//    onClick: (Boolean) -> Unit,
+//    modifier: Modifier = Modifier,
+//    backgroundColor: Color = Color.Unspecified,
+//    enabled: Boolean = true,
+//) {
+//    TooltipBox(
+//        modifier = modifier,
+//        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+//            TooltipAnchorPosition.Above
+//        ),
+//        state = rememberTooltipState(),
+//        tooltip = {
+//            PlainTooltip {
+//                Text(tooltipText)
+//            }
+//        }
+//    ) {
+//        val indicatorColor =
+//            TextKitTheme.colors.secondary.copy(alpha = if (enabled) 1f else 0.38f)
+//        Box {
+//            TextKitFormattingItem(
+//                painter = painter,
+//                value = value,
+//                onValueChange = onClick,
+//                backgroundColor = backgroundColor,
+//                enabled = enabled
+//            )
+//            if (isExpandable) {
+//                TextKitItemExpandableIndicator(indicatorColor)
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//private fun BoxScope.TextKitItemExpandableIndicator(indicatorColor: Color) {
+//    Canvas(
+//        modifier = Modifier
+//            .padding(2.dp)
+//            .size(6.dp)
+//            .align(Alignment.BottomEnd)
+//    ) {
+//        val path = Path().apply {
+//            moveTo(size.width, size.height)     // right corner
+//            lineTo(0f, size.height)             // lower left
+//            lineTo(size.width, 0f)              // upper right
+//            close()
+//        }
+//
+//        drawPath(path = path, color = indicatorColor)
+//    }
+//}
+//
+//@Composable
+//fun TextKitFormattingItem(
+//    painter: Painter,
+//    value: Boolean,
+//    onValueChange: (Boolean) -> Unit,
+//    modifier: Modifier = Modifier,
+//    backgroundColor: Color = Color.Unspecified,
+//    enabled: Boolean = true
+//) {
+//    Box(
+//        modifier = modifier
+//            // Do not steal focus from the editor: a focusable toolbar button would pull focus off the
+//            // BasicTextField on click, collapsing the active selection before the format action runs,
+//            // so marks would never reach the selected range.
+//            .focusProperties { canFocus = false }
+//            // Outer margin so a selected item's highlight rect doesn't touch its neighbors and each
+//            // item has breathing room in its normal state.
+//            .padding(horizontal = 2.dp, vertical = 2.dp)
+//            .toggleable(
+//                value = value,
+//                onValueChange = onValueChange,
+//                enabled = enabled,
+//                indication = ripple(bounded = true),
+//                interactionSource = remember { MutableInteractionSource() }
+//            )
+//            .background(
+//                color = if (value) backgroundColor else Color.Unspecified,
+//                shape = RoundedCornerShape(6.dp)
+//            )
+//            .padding(8.dp)
+//    ) {
+//        Icon(
+//            painter = painter,
+//            contentDescription = null
+//        )
+//    }
+//}
+//
+//@Composable
+//fun TextKitFormattingDivider(
+//    modifier: Modifier = Modifier,
+//    color: Color = TextKitTheme.colors.outlineVariant
+//) {
+//    VerticalDivider(
+//        modifier = modifier.fillMaxHeight().padding(vertical = 4.dp),
+//        color = color
+//    )
+//}
+//
+//@Composable
+//internal fun TextKitFormattingSeparator(
+//    modifier: Modifier = Modifier
+//) {
+//    Spacer(
+//        modifier = modifier.size(2.dp)
+//    )
+//}
+//
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun TextKitFormattingBarPreview() {
+//    TextKitTheme {
+//        TextKitFormattingBar(
+//            barState = rememberTextKitFormattingBarState(colors = TextKitPickerPallete.DefaultPallete),
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun TextKitFormattingItemPreview() {
+//    TextKitTheme {
+//        var toggle by remember { mutableStateOf(false) }
+//        TextKitFormattingItem(
+//            painter = rememberVectorPainter(Icons.Rounded.FormatBold),
+//            value = toggle,
+//            onValueChange = { toggle = it },
+//            backgroundColor = Color.Yellow
+//        )
+//    }
+//}

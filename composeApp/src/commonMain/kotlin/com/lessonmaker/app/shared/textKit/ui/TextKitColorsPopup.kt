@@ -1,5 +1,6 @@
 package com.lessonmaker.app.shared.textkit.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.widthIn
@@ -64,6 +65,8 @@ fun TextKitColorsPopup(
     ) {
         Card(
             modifier = modifier.widthIn(max = 320.dp),
+            shape = TextKitTheme.shapes.medium,
+            border = BorderStroke(1.dp, TextKitTheme.colors.outlineVariant),
             colors = CardDefaults.cardColors(
                 containerColor = TextKitTheme.colors.surface,
                 contentColor = TextKitTheme.colors.onSurface

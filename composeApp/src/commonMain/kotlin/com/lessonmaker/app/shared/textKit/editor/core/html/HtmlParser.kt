@@ -468,6 +468,7 @@ internal class HtmlParser {
                // put("alt", img.attrs["alt"].orEmpty())
                 put("url", src)
                 put("alt", img.attrs["alt"].orEmpty())
+                img.attrs["data-image-id"]?.trim()?.toIntOrNull()?.let { put("imageId", it) }
                 img.attrs["width"]?.toIntOrNull()?.let { put("width", it) }
                 img.attrs["height"]?.toIntOrNull()?.let { put("height", it) }
 

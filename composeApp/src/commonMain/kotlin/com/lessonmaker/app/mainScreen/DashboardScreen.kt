@@ -47,6 +47,10 @@ import com.lessonmaker.app.mainScreen.teacherFlow.TeacherSideMenuScreen
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.TeacherMyCoursesScreenFlow
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.TeacherLessonScreenFlow
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.addLesson.TeacherAddLessonScreenFLow
+import com.lessonmaker.app.mainScreen.teacherFlow.profile.TeacherProfileScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.requests.TeacherRequestsScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.requests.TeacherRequestsStore
+import com.lessonmaker.app.mainScreen.teacherFlow.requests.reviewEditRequestScreen.ReviewEditRequestScreenFlow
 import com.lessonmaker.app.mainScreen.toolbar.ToolBar
 import com.lessonmaker.app.navigationControler.DashboardSubScreen
 import com.lessonmaker.app.navigationControler.Screen
@@ -527,6 +531,76 @@ fun Navigations(
                         }
                     }
 
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.TeacherRequestsScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                backHeading = "Requests",
+                subHeading = "Notes access and student edit suggestions"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            TeacherRequestsScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.ReviewEditRequestScreenFlow.BASE_ROUTE) { backStackEntry ->
+            val requestId = backStackEntry.arguments
+                ?.getString(DashboardSubScreen.ReviewEditRequestScreenFlow.REQUEST_ID) ?: ""
+            val request = TeacherRequestsStore.findEditRequest(requestId)
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackImage = true,
+                showBackText = true,
+                backHeading = "Review Edit",
+                subHeading = request?.let { "${it.courseCode} · ${it.lessonTitle}" } ?: ""
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            ReviewEditRequestScreenFlow(
+                requestId = requestId,
+                dashboardViewModel = dashboardViewModel
+            ) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.TeacherProfileScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                backHeading = "Teacher Profile",
+                subHeading = "Your account details"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            TeacherProfileScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
                 }
             }
         }

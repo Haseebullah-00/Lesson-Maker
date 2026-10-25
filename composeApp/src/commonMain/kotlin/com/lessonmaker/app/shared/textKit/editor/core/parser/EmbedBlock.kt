@@ -93,6 +93,9 @@ internal const val DEFAULT_IMAGE_HEIGHT_DP = 200
 internal const val MIN_IMAGE_WIDTH_DP = 80
 internal const val MAX_IMAGE_WIDTH_DP = 800
 
+
+internal fun embedImageIdOf(payload: String): Int? =
+    embedAttrOf(payload, "imageId")?.toDoubleOrNull()?.toInt()
 internal fun embedImageWidthOf(payload: String): Int? =
     embedAttrOf(payload, "width")?.toDoubleOrNull()?.toInt()
 
@@ -103,6 +106,7 @@ internal fun embedWithImageSize(payload: String, width: Int, height: Int): Strin
     val root = TEXT_EDITOR_JSON.parseToJsonElement(payload).jsonObject
     val attrs = root["attrs"]?.jsonObject.orEmpty().toMutableMap()
     attrs["width"] = kotlinx.serialization.json.JsonPrimitive(width)
+
     attrs["height"] = kotlinx.serialization.json.JsonPrimitive(height)
     val out = LinkedHashMap(root)
     out["attrs"] = kotlinx.serialization.json.JsonObject(attrs)

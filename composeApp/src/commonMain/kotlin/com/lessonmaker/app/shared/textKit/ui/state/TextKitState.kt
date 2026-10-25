@@ -1067,7 +1067,9 @@ class TextKitState(
         if (!configuration.embedsEnabled) return false
         val layout = textLayoutResult ?: return false
         // A press anywhere on an inline image's tall line opens that image's popup.
-        imageSlotAt(position)?.let { return openEmbedAtFieldOffset(it.fieldOffset) }
+       // imageSlotAt(position)?.let { return openEmbedAtFieldOffset(it.fieldOffset) }
+        // Inline images handle their own taps (resize / remove buttons), so don't open a popup here.
+        if (imageSlotAt(position) != null) return false
         val displayOffset = layout.getOffsetForPosition(position)
             .coerceIn(0, annotatedString.length)
         val offset = displayOffsetToFieldOffset(displayOffset)

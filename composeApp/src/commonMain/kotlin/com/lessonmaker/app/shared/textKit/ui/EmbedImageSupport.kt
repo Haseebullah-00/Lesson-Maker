@@ -642,7 +642,11 @@
 
 package com.lessonmaker.app.shared.textKit.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -655,6 +659,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Remove
@@ -672,6 +677,8 @@ import com.lessonmaker.app.shared.textkit.editor.core.parser.embedImageWidthOf
 import com.lessonmaker.app.shared.textkit.editor.core.parser.embedImageHeightOf
 import com.lessonmaker.app.shared.textkit.editor.core.parser.embedWithImageSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.rounded.AspectRatio
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -680,6 +687,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
@@ -767,7 +777,8 @@ internal fun EmbedImageOverlay(state: TextKitState, modifier: Modifier = Modifie
                         .padding(vertical = 6.dp)
                         .clip(RoundedCornerShape(8.dp))
                         // Tap the picture -> open its popup (size slider + Remove).
-                        .clickable { state.openEmbedAtFieldOffset(slot.fieldOffset) }
+                    //    .clickable { state.openEmbedAtFieldOffset(slot.fieldOffset) }
+                        .pointerInput(Unit) { detectTapGestures { } }
                 ) {
                     SubcomposeAsyncImage(
                         model = url,
@@ -789,9 +800,57 @@ internal fun EmbedImageOverlay(state: TextKitState, modifier: Modifier = Modifie
                             }
                         },
                     )
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 6.dp, end = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // Opens the size dialog (width / height sliders)
+                        ImageActionButton(
+                            icon = Icons.Rounded.AspectRatio,
+                            description = "Resize image",
+                            tint = TextKitTheme.colors.onSurface
+                        ) { state.openEmbedAtFieldOffset(slot.fieldOffset) }
+
+                        // Removes the image from the note (undo brings it back)
+                        ImageActionButton(
+                            icon = Icons.Rounded.Close,
+                            description = "Remove image",
+                            tint = TextKitTheme.colors.error
+                        ) {
+                            if (state.openEmbedAtFieldOffset(slot.fieldOffset)) {
+                                state.removeActiveEmbed()
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+}
+@Composable
+private fun ImageActionButton(
+    icon: ImageVector,
+    description: String,
+    tint: Color,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .clip(CircleShape)
+            .background(TextKitTheme.colors.surface.copy(alpha = 0.92f))
+            .border(1.dp, TextKitTheme.colors.outlineVariant, CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = description,
+            tint = tint,
+            modifier = Modifier.size(16.dp)
+        )
     }
 }
 

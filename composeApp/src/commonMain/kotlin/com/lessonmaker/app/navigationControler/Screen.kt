@@ -150,6 +150,26 @@ sealed class DashboardSubScreen(val route: String) {
             ) = "$START_ROUTE/$courseId/$courseCode/$courseName"
         }
     }
+
+    @Serializable
+    data object TeacherRequestsScreenFlow : DashboardSubScreen("TeacherRequestsScreenFlow")
+
+    @Serializable
+    data object TeacherProfileScreenFlow : DashboardSubScreen("TeacherProfileScreenFlow")
+
+    @Serializable
+    data class  ReviewEditRequestScreenFlow(
+        val requestId: String
+    ) : DashboardSubScreen(START_ROUTE) {
+
+        companion object {
+            const val START_ROUTE = "ReviewEditRequestScreenFlow"
+            const val REQUEST_ID = "requestId"
+            const val BASE_ROUTE = "$START_ROUTE/{$REQUEST_ID}"
+
+            fun createRoute(requestId: String) = "$START_ROUTE/$requestId"
+        }
+    }
     @Serializable
     data object LaunchLatestListingScreen : Screen("LaunchLatestListingScreen")
 

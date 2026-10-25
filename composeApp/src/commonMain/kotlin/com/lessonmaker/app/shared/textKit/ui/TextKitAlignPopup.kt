@@ -1,5 +1,6 @@
 package com.lessonmaker.app.shared.textkit.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -54,6 +55,8 @@ fun TextKitAlignPopup(
     ) {
         Card(
             modifier = modifier.widthIn(min = 64.dp),
+            shape = TextKitTheme.shapes.medium,
+            border = BorderStroke(1.dp, TextKitTheme.colors.outlineVariant),
             colors = CardDefaults.cardColors(
                 containerColor = TextKitTheme.colors.surface,
                 contentColor = TextKitTheme.colors.onSurface

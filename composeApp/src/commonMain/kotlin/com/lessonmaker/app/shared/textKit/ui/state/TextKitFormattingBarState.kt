@@ -22,6 +22,8 @@ import com.lessonmaker.app.shared.textkit.editor.core.parser.UnderlineMark
 
 import com.lessonmaker.app.shared.textkit.ui.utils.restore
 import com.lessonmaker.app.shared.textkit.ui.utils.save
+import com.lessonmaker.app.shared.textkit.editor.core.parser.HeadingLevels
+import com.lessonmaker.app.shared.textkit.editor.core.parser.HeadingLevelsValues
 
 /**
  * Remembers a [TextKitFormattingBarState] across recomposition and configuration changes.
@@ -91,6 +93,8 @@ class TextKitFormattingBarState(
 
     var isTextStyle by mutableStateOf(isTextStyle)
         private set
+    var headingLevel by mutableStateOf(0)
+        private set
 
     /**
      * Palette shown in the text-color picker popup. Set from [rememberTextKitFormattingBarState];
@@ -124,6 +128,12 @@ class TextKitFormattingBarState(
         isHighlight = marks.any { it is HighlightMark }
         isLink = marks.any { it is LinkMark }
         isTextStyle = marks.any { it is TextStyleMark }
+        headingLevel = when ((marks.firstOrNull { it is TextStyleMark } as? TextStyleMark)?.attrs?.fontSize) {
+            HeadingLevelsValues.H1 -> HeadingLevels.H1
+            HeadingLevelsValues.H2 -> HeadingLevels.H2
+            HeadingLevelsValues.H3 -> HeadingLevels.H3
+            else -> 0
+        }
         this.embedType = embedType
         this.listItem = listItem
     }

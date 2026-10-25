@@ -1,5 +1,6 @@
 package com.lessonmaker.app.shared.textkit.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -50,8 +51,15 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil3.compose.SubcomposeAsyncImage
+import com.lessonmaker.app.common.dialogue.imageResizeDialogue.TextKitImageResizeDialog
 import com.lessonmaker.app.shared.textKit.ui.ImageSizeControls
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitBodyStyle
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitButtonStyle
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitCaptionStyle
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitTitleStyle
 import com.lessonmaker.app.shared.textkit.editor.core.TextKitEditorManager
 import com.lessonmaker.app.shared.textkit.editor.core.parser.EmbedTypes
 import com.lessonmaker.app.shared.textkit.editor.core.parser.embedCodeTextOf
@@ -97,7 +105,15 @@ fun TextKitEmbedPopup(
     onSync: (String) -> Unit = { state.updateActiveEmbed(it) },
     onOpenDocument: ((url: String) -> Unit)? = null,
 ) {
+//    val embed = state.activeEmbed ?: return
+//    val anchor = state.activeEmbedBoundingBox() ?: return
     val embed = state.activeEmbed ?: return
+
+    if (embed.embedType == EmbedTypes.Image) {
+        TextKitImageResizeDialog(embed = embed, onClose = onClose, onSync = onSync)
+        return
+    }
+
     val anchor = state.activeEmbedBoundingBox() ?: return
     // Documents delegate opening to the host app; when it provides no handler, hand the url to the
     // platform (browser tab / system viewer) via Compose's UriHandler.
@@ -160,12 +176,16 @@ private fun EmbedPopupContent(
     onDrag: (Offset) -> Unit,
     maxHeight: Dp,
     modifier: Modifier = Modifier,
+    title: String? = null,
+    draggable: Boolean = true,
 ) {
+
     // Tables carry an inline editor (with a side rail), so give them more room than image/document.
     val maxWidth = if (embed.embedType == EmbedTypes.Table) 460.dp else 360.dp
     Card(
         modifier = modifier.widthIn(max = maxWidth).heightIn(max = maxHeight),
-        shape = RoundedCornerShape(12.dp),
+        shape = TextKitTheme.shapes.medium,
+        border = BorderStroke(1.dp, TextKitTheme.colors.outlineVariant),
         colors = CardDefaults.cardColors(
             containerColor = TextKitTheme.colors.surface,
             contentColor = TextKitTheme.colors.onSurface
@@ -179,34 +199,59 @@ private fun EmbedPopupContent(
             // Header doubles as a drag handle so the popup can be moved anywhere on screen.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .pointerInput(embed.range) {
+//                        detectDragGestures { change, dragAmount ->
+//                            change.consume()
+//                            onDrag(dragAmount)
+//                        }
+//                    },
+//            ) {
+//                Icon(
+//                    Icons.Rounded.DragIndicator,
+//                    contentDescription = null,
+//                    tint = TextKitTheme.colors.onSurfaceVariant,
+//                    modifier = Modifier.size(18.dp),
+//                )
+//                Text(
+//                    text = embed.label,
+//                    style = textKitTitleStyle(),
+//                    modifier = Modifier.weight(1f).padding(start = 6.dp),
+//                )
                 modifier = Modifier
                     .fillMaxWidth()
-                    .pointerInput(embed.range) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            onDrag(dragAmount)
-                        }
-                    },
+                    .then(
+                        if (draggable) Modifier.pointerInput(embed.range) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                onDrag(dragAmount)
+                            }
+                        } else Modifier
+                    ),
             ) {
-                Icon(
-                    Icons.Rounded.DragIndicator,
-                    contentDescription = null,
-                    tint = TextKitTheme.colors.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
-                )
+                if (draggable) {
+                    Icon(
+                        Icons.Rounded.DragIndicator,
+                        contentDescription = null,
+                        tint = TextKitTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
                 Text(
-                    text = embed.label,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.weight(1f).padding(start = 6.dp),
+                    text = title ?: embed.label,
+                    style = textKitTitleStyle(),
+                    modifier = Modifier.weight(1f).padding(start = if (draggable) 6.dp else 0.dp),
                 )
                 IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) {
                     Icon(
                         Icons.Rounded.Close,
-                        contentDescription = stringResource(Res.string.close_text)
+                        contentDescription = stringResource(Res.string.close_text),
+                        tint = TextKitTheme.colors.onSurfaceVariant
                     )
                 }
             }
-            HorizontalDivider()
+            HorizontalDivider(color = TextKitTheme.colors.outlineVariant)
 
             // The body flexes to the available height (fill = false keeps small embeds compact) and
             // its own scroll handles anything taller than the capped popup.
@@ -218,41 +263,41 @@ private fun EmbedPopupContent(
 //                    EmbedTypes.Image -> {
 //                        val url = remember(embed.rawJson) { embedUrlOf(embed.rawJson) }
 //                        if (url == null) {
-                    EmbedTypes.Image -> Column {
-                        val url = remember(embed.rawJson) { embedUrlOf(embed.rawJson) }
-                        ImageSizeControls(embed.rawJson, onSync)
-                        if (url == null) {
-                            Image(
-                                painter = painterResource(Res.drawable.text_kit_banner),
-                                contentDescription = embed.label,
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
-                            )
-                        } else {
-                            SubcomposeAsyncImage(
-                                model = url,
-                                contentDescription = embed.label,
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
-                                loading = {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        CircularProgressIndicator()
-                                    }
-                                },
-                                error = {
-                                    Image(
-                                        painter = painterResource(Res.drawable.text_kit_banner),
-                                        contentDescription = embed.label,
-                                        contentScale = ContentScale.Fit,
-                                        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
-                                    )
-                                },
-                            )
-                        }
-                    }
+//                    EmbedTypes.Image -> Column {
+//                        val url = remember(embed.rawJson) { embedUrlOf(embed.rawJson) }
+//                        ImageSizeControls(embed.rawJson, onSync)
+////                        if (url == null) {
+////                            Image(
+////                                painter = painterResource(Res.drawable.text_kit_banner),
+////                                contentDescription = embed.label,
+////                                contentScale = ContentScale.Fit,
+////                                modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+////                            )
+////                        } else {
+////                            SubcomposeAsyncImage(
+////                                model = url,
+////                                contentDescription = embed.label,
+////                                contentScale = ContentScale.Fit,
+////                                modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+////                                loading = {
+////                                    Box(
+////                                        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp),
+////                                        contentAlignment = Alignment.Center,
+////                                    ) {
+////                                        CircularProgressIndicator(color = TextKitTheme.colors.primary)
+////                                    }
+////                                },
+////                                error = {
+////                                    Image(
+////                                        painter = painterResource(Res.drawable.text_kit_banner),
+////                                        contentDescription = embed.label,
+////                                        contentScale = ContentScale.Fit,
+////                                        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+////                                    )
+////                                },
+////                            )
+////                        }
+//                    }
 
                     EmbedTypes.Table -> TextKitEditableTable(
                         rawJson = embed.rawJson,
@@ -277,14 +322,14 @@ private fun EmbedPopupContent(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = name,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = textKitBodyStyle(),
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 if (url != null) {
                                     Text(
                                         text = url,
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = textKitCaptionStyle(),
                                         color = TextKitTheme.colors.onSurfaceVariant,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
@@ -292,9 +337,13 @@ private fun EmbedPopupContent(
                                 }
                             }
                             if (url != null) {
-                                TextButton(onClick = { onOpenDocument(url) }) {
-                                    Text(stringResource(Res.string.open_label))
-                                }
+//                                TextButton(onClick = { onOpenDocument(url) }) {
+//                                    Text(stringResource(Res.string.open_label))
+//                                }
+                                TextButton(
+                                    onClick = { onOpenDocument(url) },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = TextKitTheme.colors.primary),
+                                ) { Text(stringResource(Res.string.open_label), style = textKitButtonStyle()) }
                             }
                         }
                     }
@@ -306,7 +355,7 @@ private fun EmbedPopupContent(
                             if (language != null) {
                                 Text(
                                     text = language,
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style =textKitCaptionStyle(),
                                     color = TextKitTheme.colors.onSurfaceVariant,
                                 )
                             }
@@ -316,7 +365,7 @@ private fun EmbedPopupContent(
                             ) {
                                 Text(
                                     text = code,
-                                    style = MaterialTheme.typography.bodySmall.copy(
+                                    style = textKitBodyStyle().copy(
                                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                                     ),
                                 )
@@ -330,7 +379,7 @@ private fun EmbedPopupContent(
                             modifier = Modifier.fillMaxWidth()
                                 .verticalScroll(rememberScrollState())
                         ) {
-                            Text(text = embed.rawJson, style = MaterialTheme.typography.bodySmall)
+                            Text(text = embed.rawJson, style = textKitCaptionStyle())
                         }
                     }
                 }
@@ -343,7 +392,7 @@ private fun EmbedPopupContent(
                         contentColor = TextKitTheme.colors.error
                     ),
                 ) {
-                    Text(stringResource(Res.string.remove_label))
+                    Text(stringResource(Res.string.remove_label), style = textKitButtonStyle())
                 }
             }
         }

@@ -356,8 +356,8 @@ private fun studentTabs() = listOf(
 
 private fun teacherTabs() = listOf(
     SingleNavigationItem("Courses", Res.drawable.my_courses_unseleted, DashboardSubScreen.TeacherMyCoursesScreenFlow.route),
-    SingleNavigationItem("Requests", Res.drawable.requests_unselected, DashboardSubScreen.NotificationScreen.route),
-    SingleNavigationItem("Profile", Res.drawable.profile_unselected, DashboardSubScreen.AccountScreenFlow.route),
+    SingleNavigationItem("Requests", Res.drawable.requests_unselected, DashboardSubScreen.TeacherRequestsScreenFlow.route),
+    SingleNavigationItem("Profile", Res.drawable.profile_unselected, DashboardSubScreen.TeacherProfileScreenFlow.route),
 )
 
 @Composable
@@ -374,6 +374,10 @@ fun NavigationWidget(
 
 
     var selectedIndex by remember(isTeacher) { mutableStateOf(0) }
+    LaunchedEffect(currentRoute, navItems) {
+        val index = navItems.indexOfFirst { it.route == currentRoute }
+        if (index >= 0) selectedIndex = index
+    }
 
     Column(
         modifier = Modifier

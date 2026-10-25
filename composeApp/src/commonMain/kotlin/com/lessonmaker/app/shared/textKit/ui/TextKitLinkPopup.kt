@@ -452,6 +452,12 @@ import lessonmaker.composeapp.generated.resources.text_label
 import lessonmaker.composeapp.generated.resources.url_label
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.math.roundToInt
+import androidx.compose.foundation.BorderStroke
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitBodyStyle
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitButtonStyle
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitCaptionStyle
+import com.lessonmaker.app.shared.textKit.ui.utils.textKitTitleStyle
+
 
 /**
  * Popup anchored to the link currently under the caret / selection ([TextKitState.activeLink]).
@@ -662,18 +668,35 @@ private fun LinkPopupContent(
     val isYouTube = YouTubeLinkUtils.isYouTube(urlState.text.toString())
     // Theme the text fields (input text, cursor, border and label) so they follow TextKit instead of
     // falling back to the default Material color scheme.
+//    val fieldColors = OutlinedTextFieldDefaults.colors(
+//        focusedTextColor = TextKitTheme.colors.onSurface,
+//        unfocusedTextColor = TextKitTheme.colors.onSurface,
+//        cursorColor = TextKitTheme.colors.primary,
+//        focusedBorderColor = TextKitTheme.colors.primary,
+//        unfocusedBorderColor = TextKitTheme.colors.outline,
+//        focusedLabelColor = TextKitTheme.colors.primary,
+//        unfocusedLabelColor = TextKitTheme.colors.onSurfaceVariant,
+//    )
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = TextKitTheme.colors.onSurface,
         unfocusedTextColor = TextKitTheme.colors.onSurface,
         cursorColor = TextKitTheme.colors.primary,
         focusedBorderColor = TextKitTheme.colors.primary,
-        unfocusedBorderColor = TextKitTheme.colors.outline,
+        unfocusedBorderColor = TextKitTheme.colors.outlineVariant,
         focusedLabelColor = TextKitTheme.colors.primary,
         unfocusedLabelColor = TextKitTheme.colors.onSurfaceVariant,
+        focusedContainerColor = TextKitTheme.colors.surface,
+        unfocusedContainerColor = TextKitTheme.colors.surfaceVariant,
+        focusedPlaceholderColor = TextKitTheme.colors.outline,
+        unfocusedPlaceholderColor = TextKitTheme.colors.outline,
     )
+    val fieldShape = TextKitTheme.shapes.small
+    val fieldTextStyle = textKitBodyStyle()
+    val labelStyle = textKitCaptionStyle()
     Card(
         modifier = modifier.widthIn(max = 320.dp),
         shape = shape,
+        border = BorderStroke(1.dp, TextKitTheme.colors.outlineVariant),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = TextKitTheme.colors.onSurface
@@ -690,8 +713,9 @@ private fun LinkPopupContent(
             ) {
                 Text(
                     text = "Link",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.weight(1f),
+                    style = textKitTitleStyle()
                 )
                 Spacer(Modifier.size(16.dp))
                 IconButton(
@@ -701,22 +725,25 @@ private fun LinkPopupContent(
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = stringResource(Res.string.close_text),
+                        tint = TextKitTheme.colors.onSurfaceVariant
                     )
                 }
             }
-            HorizontalDivider()
+            HorizontalDivider(color = TextKitTheme.colors.outlineVariant)
             OutlinedTextField(
                 state = textState,
                 lineLimits = TextFieldLineLimits.SingleLine,
                 label = { Text(stringResource(Res.string.text_label)) },
-                colors = fieldColors,
+                textStyle = fieldTextStyle,
+                shape = fieldShape,
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
                 state = urlState,
                 lineLimits = TextFieldLineLimits.SingleLine,
                 label = { Text(stringResource(Res.string.url_label)) },
-                colors = fieldColors,
+                textStyle = fieldTextStyle,
+                shape = fieldShape,
                 modifier = Modifier.fillMaxWidth(),
             )
             if (isYouTube) {
@@ -726,7 +753,8 @@ private fun LinkPopupContent(
                         lineLimits = TextFieldLineLimits.SingleLine,
                         label = { Text("Start (optional)") },
                         placeholder = { Text("2:00") },
-                        colors = fieldColors,
+                        textStyle = fieldTextStyle,
+                        shape = fieldShape,
                         modifier = Modifier.weight(1f),
                     )
                     OutlinedTextField(
@@ -734,7 +762,8 @@ private fun LinkPopupContent(
                         lineLimits = TextFieldLineLimits.SingleLine,
                         label = { Text("End (optional)") },
                         placeholder = { Text("4:00") },
-                        colors = fieldColors,
+                        textStyle = fieldTextStyle,
+                        shape = fieldShape,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -755,14 +784,14 @@ private fun LinkPopupContent(
                         } else raw
                         if (target.isNotEmpty()) uriHandler.openUri(target)
                     },
-                ) { Text("Open") }
+                ) { Text("Open", style = textKitButtonStyle()) }
                 TextButton(
                     onClick = { onRemove(link) },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = TextKitTheme.colors.error
                     ),
                 ) {
-                    Text(stringResource(Res.string.remove_label))
+                    Text(stringResource(Res.string.remove_label), style = textKitButtonStyle())
                 }
                 Spacer(Modifier.size(8.dp))
                 Button(
@@ -787,7 +816,7 @@ private fun LinkPopupContent(
                         contentColor = TextKitTheme.colors.onPrimary,
                     ),
                 ) {
-                    Text(stringResource(Res.string.edit_label))
+                    Text(stringResource(Res.string.edit_label), style = textKitButtonStyle())
                 }
             }
         }

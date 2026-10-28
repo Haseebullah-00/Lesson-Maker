@@ -287,6 +287,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.lessonmaker.app.mainScreen.DashboardViewModel
+import com.lessonmaker.app.navigationControler.DashboardSubScreen
 import com.lessonmaker.app.theme.REdF14336
 import com.lessonmaker.app.theme.Regular
 import com.lessonmaker.app.theme.TextSize12
@@ -317,23 +319,24 @@ import org.jetbrains.compose.resources.painterResource
 
 data class SingleSideMenu(
     val title: String,
-    val newScreenRoute: String,
+
     val icon: DrawableResource,
     val badgeCount: Int = 0
 )
 
 @Composable
 fun TeacherSideMenuScreen(
-    teacherName: String = "Dr. Adnan",
-    navigation: (String) -> Unit
+    dashboardViewModel: DashboardViewModel,
+    dashboardRoutes: (String) -> Unit
 ) {
+    val teacherName = "Dr. Adnan"
 
     val menu = listOf(
-        SingleSideMenu("Archived", "archived", Res.drawable.ic_archived),
-        SingleSideMenu("Colleagues' Courses", "colleagues_courses", Res.drawable.ic_colleagues_courses),
-        SingleSideMenu("Notes Approvals", "notes_approvals", Res.drawable.ic_notes_approvals, badgeCount = 2),
-        SingleSideMenu("Allow Students", "allow_students", Res.drawable.ic_allow_students),
-        SingleSideMenu("Allowed Students", "allowed_students", Res.drawable.ic_allowed_students),
+        SingleSideMenu("Archived", Res.drawable.ic_archived),
+        SingleSideMenu("Colleagues' Courses", Res.drawable.ic_colleagues_courses),
+        SingleSideMenu("Notes Approvals", Res.drawable.ic_notes_approvals, badgeCount = 2),
+        SingleSideMenu("Allow Students", Res.drawable.ic_allow_students),
+        SingleSideMenu("Allowed Students", Res.drawable.ic_allowed_students),
     )
 
     Column(
@@ -386,7 +389,28 @@ fun TeacherSideMenuScreen(
                 .weight(1f)
         ) {
             items(menu) { item ->
-                SideMenuItem(item = item, onClick = { navigation.invoke(item.newScreenRoute) })
+                SideMenuItem(item = item, onClick = {
+                    if(item.title=="Archived")
+                    {
+                        dashboardRoutes.invoke(DashboardSubScreen.TeacherArchivedScreenFlow.route)
+                    }
+                    else if(item.title=="Colleagues' Courses"){
+                        dashboardRoutes.invoke(DashboardSubScreen.ColleaguesCoursesScreenFlow.route)
+                    }
+                    else if(item.title=="Notes Approvals"){
+                        dashboardRoutes.invoke(DashboardSubScreen.NotesApprovalsScreenFlow.route)
+
+                    }
+                    else if(item.title=="Allow Students"){
+                        dashboardRoutes.invoke(DashboardSubScreen.AllowAccessScreenFlow.route)
+                    }
+                    else{
+                        dashboardRoutes.invoke(DashboardSubScreen.AllowedAccessScreenFlow.route)
+                    }
+
+
+                }
+                )
             }
         }
 

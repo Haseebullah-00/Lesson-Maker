@@ -64,7 +64,7 @@ fun TeacherRequestsScreenFlow(
     dashboardViewModel: DashboardViewModel,
     dashboardRoutes: (String) -> Unit
 ) {
-    // rememberSaveable so coming back from "Review Edit" keeps the Edit tab selected
+
     var selectedTab by rememberSaveable { mutableStateOf(0) }
 
     val noteRequests = TeacherRequestsStore.noteRequests

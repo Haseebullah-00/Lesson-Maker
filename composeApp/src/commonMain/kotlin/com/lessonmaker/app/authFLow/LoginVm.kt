@@ -60,10 +60,12 @@ class LoginVm(
         if(accountType== AuthAccountType.Teacher){
             sharedPreferenceManager.isTeacherLoggedIn=true
             sharedPreferenceManager.isStudentLoggedIn=false
+            sharedPreferenceManager.isLoggedIn=true
         }
         else{
             sharedPreferenceManager.isStudentLoggedIn=true
             sharedPreferenceManager.isTeacherLoggedIn=false
+            sharedPreferenceManager.isLoggedIn=true
         }
 
     }

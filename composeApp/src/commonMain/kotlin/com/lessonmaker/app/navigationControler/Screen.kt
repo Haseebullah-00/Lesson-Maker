@@ -156,6 +156,17 @@ sealed class DashboardSubScreen(val route: String) {
 
     @Serializable
     data object TeacherProfileScreenFlow : DashboardSubScreen("TeacherProfileScreenFlow")
+    @Serializable
+    data object ColleaguesCoursesScreenFlow: DashboardSubScreen("ColleaguesCoursesScreenFlow")
+    @Serializable
+    data object AddColleaguesCoursesScreenFlow: DashboardSubScreen("AddColleaguesCoursesScreenFlow")
+
+    @Serializable
+    data object NotesApprovalsScreenFlow: DashboardSubScreen("NotesApprovalsScreenFlow")
+    @Serializable
+    data object AllowAccessScreenFlow: DashboardSubScreen("AllowAccessScreenFlow")
+    @Serializable
+    data object AllowedAccessScreenFlow: DashboardSubScreen("AllowedAccessScreenFlow")
 
     @Serializable
     data class  ReviewEditRequestScreenFlow(
@@ -170,6 +181,9 @@ sealed class DashboardSubScreen(val route: String) {
             fun createRoute(requestId: String) = "$START_ROUTE/$requestId"
         }
     }
+
+    @Serializable
+    data object TeacherArchivedScreenFlow: DashboardSubScreen("TeacherArchivedScreenFlow")
     @Serializable
     data object LaunchLatestListingScreen : Screen("LaunchLatestListingScreen")
 

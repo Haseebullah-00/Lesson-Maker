@@ -9,23 +9,16 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.lessonmaker.app.common.MainAppBackground
-import com.lessonmaker.app.common.MainGradientBg
 import com.lessonmaker.app.mainScreen.account.AccountScreenFlow
 import com.lessonmaker.app.mainScreen.account.changePassword.ChangePasswordScreen
 import com.lessonmaker.app.mainScreen.account.editProfile.EditProfileScreen
@@ -51,13 +44,18 @@ import com.lessonmaker.app.mainScreen.teacherFlow.profile.TeacherProfileScreenFl
 import com.lessonmaker.app.mainScreen.teacherFlow.requests.TeacherRequestsScreenFlow
 import com.lessonmaker.app.mainScreen.teacherFlow.requests.TeacherRequestsStore
 import com.lessonmaker.app.mainScreen.teacherFlow.requests.reviewEditRequestScreen.ReviewEditRequestScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.allowAccess.AllowAccessScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.allowedAccess.AllowedAccessScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.archived.TeacherArchivedScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.colleaguesCourses.ColleaguesCoursesScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.colleaguesCourses.addColleaguesCourses.AddColleaguesCoursesScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.notesApprovals.NotesApprovalsScreenFlow
 import com.lessonmaker.app.mainScreen.toolbar.ToolBar
 import com.lessonmaker.app.navigationControler.DashboardSubScreen
 import com.lessonmaker.app.navigationControler.Screen
 import com.lessonmaker.app.shared.statusBarStyle.StatusBarIconColor
 import com.lessonmaker.app.shared.statusBarStyle.setStatusBarIconColor
 import com.lessonmaker.app.singleTopNavigation
-import com.lessonmaker.app.theme.PrimaryColor
 import com.lessonmaker.app.theme.White
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -295,7 +293,7 @@ fun DashboardScreen(destination: String? = null, newRouts: (String) -> Unit) {
                 drawerState = drawerState,
                 gesturesEnabled = false, // opened only via the toolbar menu button
                 drawerContent = {
-                    TeacherSideMenuScreen { route ->
+                    TeacherSideMenuScreen(dashboardViewModel = dashboardViewModel) { route ->
                         // always close the drawer first
                         scope.launch { drawerState.close() }
 
@@ -593,6 +591,137 @@ fun Navigations(
             )
             dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
             TeacherProfileScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.TeacherArchivedScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                showBackImage = true,
+                backHeading = "Archived",
+                subHeading = "Courses you have archived"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            TeacherArchivedScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.ColleaguesCoursesScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                showBackImage = true,
+                backHeading = "Colleagues’ Courses",
+                subHeading = "Courses shared by your colleagues"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation =false)
+            ColleaguesCoursesScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.AddColleaguesCoursesScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                showBackImage = true,
+                backHeading = "Add Colleagues’ Courses",
+                subHeading = "Browse courses and request their lecture notes"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            AddColleaguesCoursesScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.NotesApprovalsScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                showBackImage = true,
+                backHeading = "Notes Approvals",
+                subHeading = "Student edit suggestions waiting for your review"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            NotesApprovalsScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.AllowAccessScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                showBackImage = true,
+                backHeading = "Allow Access",
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            AllowAccessScreenFlow(dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.AllowedAccessScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                showBackImage = true,
+                backHeading = "Allowed Students",
+                subHeading = "Approved Academic Members"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            AllowedAccessScreenFlow(dashboardViewModel = dashboardViewModel) {
                 navController.clearBackIfAtDashBoard(
                     newPath = it,
                     dashboardViewModel = dashboardViewModel

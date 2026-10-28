@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,11 +30,15 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldColors
 import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -225,7 +230,129 @@ fun SimpleInputField(
     }
 }
 
+@Composable
+fun AppDropdownField(
+    text: String,
+    hint: String,
+    enabled: Boolean = true,
+    errorMessage: String? = null,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    onClear: () -> Unit
+) {
+    val borderColor = when {
+        errorMessage != null -> REdF14336
+        !enabled -> Color(0xFFDEDEDE)
+        else -> loginTabSelectionBg
+    }
 
+    val textColor = if (errorMessage != null) REdF14336 else fieldText
+    val iconColor = if (errorMessage != null) REdF14336 else fieldIcon
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .border(
+                1.5.dp,
+                borderColor,
+                RoundedCornerShape(12.dp)
+            )
+            .background(White)
+            .then(
+                if (enabled) {
+                    Modifier.clickable(
+                        interactionSource = remember {
+                            MutableInteractionSource()
+                        },
+                        indication = null,
+                        onClick = onClick
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .padding(start = 16.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        // Selected text or hint
+        Text(
+            text = text.ifEmpty { hint },
+            style = TextSize16().copy(fontSize = 15.sp),
+            color = if (text.isEmpty()) {
+                if (errorMessage != null) REdF14336 else fieldHint
+            } else {
+                textColor
+            },
+            maxLines = 1,
+            modifier = Modifier.weight(1f)
+        )
+
+        // Clear icon appears only when text is not empty
+        if (text.isNotEmpty()) {
+            inputFieldClear(
+                tint = fieldIcon,
+                onValueChange = {
+                    onClear()
+                }
+            )
+        }
+
+
+        Icon(
+            imageVector = Icons.Rounded.KeyboardArrowDown,
+            contentDescription = "Open dropdown",
+            modifier = Modifier.size(22.dp),
+            tint = iconColor
+        )
+    }
+}
+
+@Composable
+fun AppSearchField(
+    text: String,
+    hint: String,
+    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.5.dp, loginTabSelectionBg, RoundedCornerShape(12.dp))
+            .background(White)
+            .padding(start = 12.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Rounded.Search, null, Modifier.size(20.dp), tint = fieldIcon)
+        Spacer(Modifier.width(8.dp))
+        BasicTextField(
+            value = text,
+            onValueChange = onValueChange,
+            modifier = Modifier.weight(1f).fillMaxHeight().padding(vertical = 12.dp),
+            textStyle = InputFieldTextStyle().copy(color = fieldText, fontSize = 15.sp, lineHeight = 20.sp),
+            singleLine = true,
+            cursorBrush = SolidColor(fieldCursor),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+            decorationBox = { inner ->
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                    if (text.isEmpty()) {
+                        Text(hint, style = TextSize16().copy(fontSize = 15.sp), color = fieldHint)
+                    }
+                    inner()
+                }
+            }
+        )
+        if (text.isNotEmpty()) {
+            inputFieldClear(tint = fieldIcon, onValueChange = onValueChange)
+        }
+    }
+}
 @Composable
 fun SimpleInputFieldWithErrorNew(
     text: String,

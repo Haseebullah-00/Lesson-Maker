@@ -13,6 +13,8 @@ sealed class Screen(val route: String) {
     @Serializable
     data object DataCellLoginScreenFlow: Screen("DataCellLoginScreenFlow")
     @Serializable
+    data object DataCellUploadScreenFlow: Screen("DataCellUploadScreenFlow")
+    @Serializable
     data object WelcomeScreen: Screen("WelcomeScreen")
 
     @Serializable
@@ -184,6 +186,78 @@ sealed class DashboardSubScreen(val route: String) {
 
     @Serializable
     data object TeacherArchivedScreenFlow: DashboardSubScreen("TeacherArchivedScreenFlow")
+    @Serializable
+    data object StudentMyCoursesScreenFLow: DashboardSubScreen("StudentMyCoursesScreenFLow")
+//    @Serializable
+//    data object StudentMyCoursesScreenFlow : DashboardSubScreen("StudentMyCoursesScreenFlow")
+
+    @Serializable
+    data object StudentProfileScreenFlow : DashboardSubScreen("StudentProfileScreenFlow")
+
+    @Serializable
+    data object StudentEditAccessScreenFlow : DashboardSubScreen("StudentEditAccessScreenFlow")
+    @Serializable
+    data class StudentEditCourseLessonsScreenFlow(
+        val courseId: String,
+        val courseCode: String,
+        val courseName: String
+    ) : DashboardSubScreen(START_ROUTE) {
+        companion object {
+            const val START_ROUTE = "StudentEditCourseLessonsScreenFlow"
+            const val COURSE_ID = "courseId"
+            const val COURSE_CODE = "courseCode"
+            const val COURSE_NAME = "courseName"
+            const val BASE_ROUTE = "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}"
+            fun createRoute(courseId: String, courseCode: String, courseName: String) =
+                "$START_ROUTE/$courseId/$courseCode/$courseName"
+        }
+    }
+
+    @Serializable
+    data class StudentEditLessonScreenFlow(
+        val lessonId: String,
+        val courseCode: String
+    ) : DashboardSubScreen(START_ROUTE) {
+        companion object {
+            const val START_ROUTE = "StudentEditLessonScreenFlow"
+            const val LESSON_ID = "lessonId"
+            const val COURSE_CODE = "courseCode"
+            const val BASE_ROUTE = "$START_ROUTE/{$LESSON_ID}/{$COURSE_CODE}"
+            fun createRoute(lessonId: String, courseCode: String) = "$START_ROUTE/$lessonId/$courseCode"
+        }
+    }
+
+    @Serializable
+    data class StudentLessonsScreenFlow(
+        val courseId: String,
+        val courseCode: String,
+        val courseName: String
+    ) : DashboardSubScreen(START_ROUTE) {
+        companion object {
+            const val START_ROUTE = "StudentLessonsScreenFlow"
+            const val COURSE_ID = "courseId"
+            const val COURSE_CODE = "courseCode"
+            const val COURSE_NAME = "courseName"
+            const val BASE_ROUTE = "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}"
+            fun createRoute(courseId: String, courseCode: String, courseName: String) =
+                "$START_ROUTE/$courseId/$courseCode/$courseName"
+        }
+    }
+
+    @Serializable
+    data class StudentLessonContentScreenFlow(
+        val lessonId: String,
+        val courseCode: String
+    ) : DashboardSubScreen(START_ROUTE) {
+        companion object {
+            const val START_ROUTE = "StudentLessonContentScreenFlow"
+            const val LESSON_ID = "lessonId"
+            const val COURSE_CODE = "courseCode"
+            const val BASE_ROUTE = "$START_ROUTE/{$LESSON_ID}/{$COURSE_CODE}"
+            fun createRoute(lessonId: String, courseCode: String) =
+                "$START_ROUTE/$lessonId/$courseCode"
+        }
+    }
     @Serializable
     data object LaunchLatestListingScreen : Screen("LaunchLatestListingScreen")
 

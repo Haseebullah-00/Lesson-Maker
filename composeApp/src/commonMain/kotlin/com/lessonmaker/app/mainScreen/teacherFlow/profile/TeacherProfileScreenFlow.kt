@@ -131,6 +131,7 @@ fun TeacherProfileScreenFlow(
                 // same logout behaviour as the existing AccountScreenFlow
                 dashboardViewModel.sharedPreferenceManager.isStudentLoggedIn = false
                 dashboardViewModel.sharedPreferenceManager.isTeacherLoggedIn = false
+                dashboardViewModel.sharedPreferenceManager.isLoggedIn=false
                 dashboardRoutes.invoke(Screen.LoginScreenFlow.route)
             }
         )

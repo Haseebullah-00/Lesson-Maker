@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.lessonmaker.app.authFLow.AuthAccountType
 import com.lessonmaker.app.base.ShareViewModelInterface
 import com.lessonmaker.app.base.SharedBaseViewModel
+import com.lessonmaker.app.common.isValidEmail
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
 import com.lessonmaker.app.network.ApiService
@@ -31,6 +32,31 @@ class LoginVm(
     var password by mutableStateOf("")
 
     var passwordError by mutableStateOf<String?>(null)
+
+    fun isFormValid(): Boolean {
+        var valid = true
+
+        // email: not blank + regex (works for teacher and student accounts)
+        if (email.isBlank()) {
+            emailError = "Please enter email"
+            valid = false
+        } else if (!email.isValidEmail()) {
+            emailError = "Please enter valid email"
+            valid = false
+        } else {
+            emailError = null
+        }
+
+
+        if (password.isBlank()) {
+            passwordError = "Please enter password"
+            valid = false
+        } else {
+            passwordError = null
+        }
+        return valid
+    }
+
 
 
 

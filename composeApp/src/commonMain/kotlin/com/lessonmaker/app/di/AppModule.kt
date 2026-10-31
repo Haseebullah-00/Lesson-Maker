@@ -2,6 +2,7 @@ package com.lessonmaker.app.di
 
 
 import com.lessonmaker.app.authFLow.AllBooksVM
+import com.lessonmaker.app.authFLow.dataCell.dataCellUploadScreen.DataCellUploadVm
 import com.russhwolf.settings.Settings
 import com.lessonmaker.app.mainScreen.DashboardViewModel
 import com.lessonmaker.app.network.ApiService
@@ -37,6 +38,7 @@ val appModule = module {
     viewModelOf(::LoginVm)
     viewModelOf(::DataCellLoginVm)
     viewModelOf(::AllBooksVM)
+    viewModelOf(::DataCellUploadVm)
 
 }
 val authModule = module {

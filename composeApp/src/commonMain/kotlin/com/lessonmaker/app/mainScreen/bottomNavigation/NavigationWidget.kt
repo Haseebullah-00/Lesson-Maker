@@ -349,8 +349,8 @@ data class SingleNavigationItem(
 
 
 private fun studentTabs() = listOf(
-    SingleNavigationItem("My Courses", Res.drawable.my_courses_unseleted, DashboardSubScreen.TeacherMyCoursesScreenFlow.route),
-    SingleNavigationItem("Profile", Res.drawable.profile_unselected, DashboardSubScreen.AccountScreenFlow.route),
+    SingleNavigationItem("My Courses", Res.drawable.my_courses_unseleted, DashboardSubScreen.StudentMyCoursesScreenFLow.route),
+    SingleNavigationItem("Profile", Res.drawable.profile_unselected, DashboardSubScreen.StudentProfileScreenFlow.route),
 )
 
 

@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.lessonmaker.app.common.FormErrorText
 import com.lessonmaker.app.common.MainButton
 import com.lessonmaker.app.common.MainButtonNew
 import com.lessonmaker.app.common.MainGradientBg
@@ -140,10 +141,12 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
                 Spacer(modifier = Modifier.height(10.dp))
                 SimpleInputFieldWithErrorNew(
                     text = loginVm.email,
-                    hint =  if(loginVm.accountType== AuthAccountType.Teacher)"dr.abc@biit.edu.pk" else "2023-ARID-0000@biit.edu.pk",
-                    errorMessage = null,
+                    hint = if (loginVm.accountType == AuthAccountType.Teacher) "dr.abc@biit.edu.pk" else "2023-ARID-0000@biit.edu.pk",
+                    errorMessage = loginVm.emailError,
                     onValueChange = {
-                        loginVm.email=it
+                        loginVm.email = it
+                        loginVm.emailError = null
+                        loginVm.apiError = null
                     }
                 )
 
@@ -155,21 +158,32 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
                 Spacer(modifier = Modifier.height(10.dp))
                 SimplePasswordInputFieldNew(
                     text = loginVm.password,
-                    hint =  "Enter password",
-                    errorMessage = null,
+                    hint = "Enter password",
+                    errorMessage = loginVm.passwordError,
                     onValueChange = {
-                        loginVm.password=it
+                        loginVm.password = it
+                        loginVm.passwordError = null
+                        loginVm.apiError = null
                     }
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
+                if(loginVm.emailError!=null){
+                    FormErrorText(loginVm.emailError)
+                }
+               else if(loginVm.passwordError!=null){
+                    FormErrorText(loginVm.passwordError)
+                }
 
-                MainButtonNew(heading = "Login"){
-                    loginVm.sharePrefernce()
 
 
-                    newRouts.invoke(Screen.DashboardScreen.route)
+                Spacer(modifier = Modifier.height(20.dp))
 
+                MainButtonNew(heading = "Login") {
+                  if(loginVm.isFormValid()){
+                      loginVm.sharePrefernce()
+                      newRouts.invoke(Screen.DashboardScreen.route)
+                  }
                 }
             }
             Spacer(modifier = Modifier.height(50.dp))

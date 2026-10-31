@@ -27,6 +27,25 @@ val fieldHint = Color(0xFF94A3B8)
 val fieldIcon = Color(0xFF64748B)
 val fieldCursor = Color(0xFF2563EB)
 
+// ---- Student edit-access screens ----
+val infoBannerBg = Color(0xFFEFF6FF)
+val infoBannerBorder = Color(0xFFBFDBFE)
+val infoBannerText = Color(0xFF2563EB)
+
+val segmentTabBg = Color(0xFFE9ECF3)
+
+val statusPendingBg = Color(0xFFFEF3C7)
+val statusPendingText = Color(0xFFB45309)
+val statusApprovedBg = Color(0xFFDCFCE7)
+val statusApprovedText = Color(0xFF15803D)
+val statusRejectedBg = Color(0xFFFEE2E2)
+val statusRejectedText = Color(0xFFB91C1C)
+// ---- Data cell upload ----
+val successBoxBg = Color(0xFFECFDF5)
+val successBoxBorder = Color(0xFF86EFAC)
+val dashBorderClr = Color(0xFFCBD5E1)
+val formErrorClr = Color(0xFFFB7181)
+
 
 
 var TextColor1E = Color(0xFF1E1E1E)

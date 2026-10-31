@@ -4,6 +4,7 @@ package com.lessonmaker.app.network
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
 import com.lessonmaker.app.extensionFunctions.handleNull
+import com.lessonmaker.app.models.CommonAPIResponse
 import com.lessonmaker.app.models.auth.OtpResponse
 import com.lessonmaker.app.models.book.BooksResponse
 import com.lessonmaker.app.shared.platformExtensions.deviceType
@@ -33,15 +34,15 @@ class ApiService(
     }
 
 
-    suspend fun loginUser(email: String, password: String): ApiResult<OtpResponse> {
+    suspend fun dataCellLogin(email: String, password: String): ApiResult<CommonAPIResponse> {
         return safeApiCall(commonLoading = commonLoading) {
-            client.safePost(
-                urlString = NetworkUtils.BaseUrl.plus("auth/email_login"),
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("DataCell/login"),
                 block = {
                     parameter("email", email)
                     parameter("password", password)
                     parameter("device_type", deviceType())
-                    parameter("fcm_token", sharedPreferenceManager.getFcmToken.handleNull())
+
                 }
             )
         }

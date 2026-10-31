@@ -35,6 +35,15 @@ import com.lessonmaker.app.mainScreen.home.AboutMe.AboutMeScreen
 import com.lessonmaker.app.mainScreen.home.LaunchHomeScreenFlow
 import com.lessonmaker.app.mainScreen.leaderBoard.LeaderBoardScreenFlow
 import com.lessonmaker.app.mainScreen.notification.NotificationScreen
+import com.lessonmaker.app.mainScreen.studentFlow.StudentDummyStore
+import com.lessonmaker.app.mainScreen.studentFlow.editAccess.StudentEditAccessScreenFlow
+import com.lessonmaker.app.mainScreen.studentFlow.editAccess.lessons.StudentEditCourseLessonsScreenFlow
+import com.lessonmaker.app.mainScreen.studentFlow.editAccess.lessons.editLesson.StudentEditLessonScreenFlow
+import com.lessonmaker.app.mainScreen.studentFlow.myCourses.StudentMyCoursesScreenFLow
+import com.lessonmaker.app.mainScreen.studentFlow.myCourses.lessons.StudentLessonsScreenFlow
+import com.lessonmaker.app.mainScreen.studentFlow.myCourses.lessons.lessonContent.StudentLessonContentScreenFlow
+import com.lessonmaker.app.mainScreen.studentFlow.profile.StudentProfileScreenFlow
+import com.lessonmaker.app.mainScreen.studentFlow.sideMenu.StudentSideMenuScreen
 import com.lessonmaker.app.mainScreen.teacherFlow.RightModalDrawer
 import com.lessonmaker.app.mainScreen.teacherFlow.TeacherSideMenuScreen
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.TeacherMyCoursesScreenFlow
@@ -293,15 +302,18 @@ fun DashboardScreen(destination: String? = null, newRouts: (String) -> Unit) {
                 drawerState = drawerState,
                 gesturesEnabled = false, // opened only via the toolbar menu button
                 drawerContent = {
-                    TeacherSideMenuScreen(dashboardViewModel = dashboardViewModel) { route ->
-                        // always close the drawer first
+                    val onMenuRoute: (String) -> Unit = { route ->
                         scope.launch { drawerState.close() }
-
                         when (route) {
                             "close" -> Unit
                             DashboardSubScreen.POPBackStack.route -> navController.popBackStack()
                             else -> navController.singleTopNavigation(route)
                         }
+                    }
+                    if (dashboardViewModel.sharedPreferenceManager.isTeacherLoggedIn) {
+                        TeacherSideMenuScreen(dashboardViewModel = dashboardViewModel, dashboardRoutes = onMenuRoute)
+                    } else {
+                        StudentSideMenuScreen(dashboardViewModel = dashboardViewModel, dashboardRoutes = onMenuRoute)
                     }
                 }
             ) {
@@ -398,7 +410,10 @@ fun Navigations(
 
     NavHost(
         navController = navController,
-        startDestination = DashboardSubScreen.TeacherMyCoursesScreenFlow.route
+        startDestination =if (dashboardViewModel.sharedPreferenceManager.isTeacherLoggedIn)
+            DashboardSubScreen.TeacherMyCoursesScreenFlow.route
+        else
+            DashboardSubScreen.StudentMyCoursesScreenFLow.route
     ) {
 
         composable(DashboardSubScreen.LaunchHomeScreenFlow.route) {
@@ -733,6 +748,167 @@ fun Navigations(
                 }
             }
         }
+        composable(DashboardSubScreen.StudentMyCoursesScreenFLow.route) {
+            val name = StudentDummyStore.student.let { "${it.name} (${it.arid})" }
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                backHeading = "My Enrolled Courses",
+                subHeading = "Welcome back, $name",
+                showMenu = true
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            StudentMyCoursesScreenFLow(dashboardViewModel = dashboardViewModel){
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.StudentLessonsScreenFlow.BASE_ROUTE) {
+            val courseId = it.arguments?.getString(DashboardSubScreen.StudentLessonsScreenFlow.COURSE_ID) ?: ""
+            val courseCode = it.arguments?.getString(DashboardSubScreen.StudentLessonsScreenFlow.COURSE_CODE) ?: ""
+            val courseName = it.arguments?.getString(DashboardSubScreen.StudentLessonsScreenFlow.COURSE_NAME) ?: ""
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackImage = true,
+                showBackText = true,
+                backHeading = "$courseCode Lecture Notes",
+                subHeading = courseName
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            StudentLessonsScreenFlow(courseId, courseCode, courseName, dashboardViewModel){
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.StudentLessonContentScreenFlow.BASE_ROUTE) {
+            val lessonId = it.arguments?.getString(DashboardSubScreen.StudentLessonContentScreenFlow.LESSON_ID) ?: ""
+            val courseCode = it.arguments?.getString(DashboardSubScreen.StudentLessonContentScreenFlow.COURSE_CODE) ?: ""
+            val number = StudentDummyStore.lesson(lessonId)?.number ?: 1
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackImage = true,
+                showBackText = true,
+                backHeading = "Lesson Content",
+                subHeading = "$courseCode • Lesson $number"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            StudentLessonContentScreenFlow(lessonId, courseCode, dashboardViewModel){
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.StudentEditAccessScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true, showBackImage = true, showBackText = true,
+                backHeading = "Edit Access",
+                subHeading = "Courses where your teachers allowed you to edit"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            StudentEditAccessScreenFlow(dashboardViewModel){
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.BASE_ROUTE) {
+            val courseId = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.COURSE_ID) ?: ""
+            val code = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.COURSE_CODE) ?: ""
+            val name = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.COURSE_NAME) ?: ""
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true, showBackImage = true, showBackText = true,
+                backHeading = "$code Lecture Notes",
+                subHeading = "$name · Edit mode"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            StudentEditCourseLessonsScreenFlow(courseId, code, name, dashboardViewModel){
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.StudentEditLessonScreenFlow.BASE_ROUTE) {
+            val lessonId = it.arguments?.getString(DashboardSubScreen.StudentEditLessonScreenFlow.LESSON_ID) ?: ""
+            val code = it.arguments?.getString(DashboardSubScreen.StudentEditLessonScreenFlow.COURSE_CODE) ?: ""
+            val title = StudentDummyStore.lesson(lessonId)?.title ?: ""
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true, showBackImage = true, showBackText = true,
+                backHeading = "Edit Lesson",
+                subHeading = "$code · $title"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            StudentEditLessonScreenFlow(lessonId, code, dashboardViewModel){
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.StudentProfileScreenFlow.route) {
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackText = true,
+                backHeading = "Student Profile",
+                subHeading = "Your account details"
+            )
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
+            StudentProfileScreenFlow(dashboardViewModel = dashboardViewModel){
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> mainNavigationRoute.invoke(newRoute)
+                        else -> navController.navigate(newRoute)
+                    }
+                }
+            }
+        }
+
+
         composable(DashboardSubScreen.AboutMeScreen.route){
 
             dashboardViewModel.toolBarViewModel.updateToolBar(

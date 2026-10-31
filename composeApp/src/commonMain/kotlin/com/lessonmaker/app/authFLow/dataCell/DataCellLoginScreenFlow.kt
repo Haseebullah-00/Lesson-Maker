@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lessonmaker.app.authFLow.topHeading
+import com.lessonmaker.app.common.FormErrorText
 import com.lessonmaker.app.common.MainButtonNew
 import com.lessonmaker.app.common.SimpleInputFieldWithErrorNew
 import com.lessonmaker.app.common.SimplePasswordInputFieldNew
@@ -60,8 +61,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun DataCellLoginScreenFlow(newRouts: (String) -> Unit){
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+
 
     val dataCellLoginVm = koinViewModel<DataCellLoginVm>()
 
@@ -112,9 +112,11 @@ fun DataCellLoginScreenFlow(newRouts: (String) -> Unit){
                 SimpleInputFieldWithErrorNew(
                     text = dataCellLoginVm.email,
                     hint = "datacell.admin@biit.edu.pk",
-                    errorMessage = null,
+                    errorMessage = dataCellLoginVm.emailError,
                     onValueChange = {
                         dataCellLoginVm.email = it
+                        dataCellLoginVm.emailError = null
+                        dataCellLoginVm.apiError = null
                     }
                 )
 
@@ -128,14 +130,28 @@ fun DataCellLoginScreenFlow(newRouts: (String) -> Unit){
                 SimplePasswordInputFieldNew(
                     text = dataCellLoginVm.password,
                     hint = "Enter password",
-                    errorMessage = null,
+                    errorMessage = dataCellLoginVm.passwordError,
                     onValueChange = {
                         dataCellLoginVm.password = it
+                        dataCellLoginVm.passwordError = null
+                        dataCellLoginVm.apiError = null
                     }
                 )
 
+                if( dataCellLoginVm.emailError!=null){
+                    FormErrorText( dataCellLoginVm.emailError)
+                }
+                else if( dataCellLoginVm.passwordError!=null){
+                    FormErrorText( dataCellLoginVm.passwordError)
+                }
                 Spacer(modifier = Modifier.height(20.dp))
                 MainButtonNew(heading = "Authenticate Portal") {
+                    if(dataCellLoginVm.isFormValid()){
+                        dataCellLoginVm.callLogInAPI(callBack = {
+                            newRouts.invoke(Screen.DataCellUploadScreenFlow.route)
+                        })
+                    }
+
 
                 }
 

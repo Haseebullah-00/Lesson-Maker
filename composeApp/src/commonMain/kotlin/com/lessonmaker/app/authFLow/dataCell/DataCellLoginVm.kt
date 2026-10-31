@@ -7,10 +7,15 @@ import androidx.lifecycle.viewModelScope
 import com.lessonmaker.app.authFLow.AuthAccountType
 import com.lessonmaker.app.base.ShareViewModelInterface
 import com.lessonmaker.app.base.SharedBaseViewModel
+import com.lessonmaker.app.common.dialogue.UiState
+import com.lessonmaker.app.common.isValidEmail
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
+import com.lessonmaker.app.extensionFunctions.checkForSuccess
+import com.lessonmaker.app.extensionFunctions.handleNull
 import com.lessonmaker.app.network.ApiService
-
+import com.lessonmaker.app.network.getOnlySuccess
+import kotlinx.coroutines.launch
 
 
 class DataCellLoginVm(
@@ -38,6 +43,60 @@ class DataCellLoginVm(
     // Add error state
     var phoneNumberError by mutableStateOf<String?>(null)
     var apiError by mutableStateOf<String?>(null)
+    fun isFormValid(): Boolean {
+        var valid = true
+
+        if (email.isBlank()) {
+            emailError = "Please enter email"
+            valid = false
+        } else if (!email.isValidEmail()) {
+            emailError = "Please enter valid email"
+            valid = false
+        } else {
+            emailError = null
+        }
+
+        if (password.isBlank()) {
+            passwordError = "Please enter password"
+            valid = false
+        } else {
+            passwordError = null
+        }
+        return valid
+    }
+
+
+    fun callLogInAPI(callBack: ()-> Unit) {
+        apiError = null
+        viewModelScope.launch {
+            commonLoading.apiCall = UiState.Loading
+            try {
+
+                val response =
+                    apiService.dataCellLogin(
+                  email = email,
+                        password = password
+                    ).getOnlySuccess()
+
+                commonLoading.apiCall = UiState.Success(response!!)
+                if (response?.status.checkForSuccess()) {
+
+                    sharedPreferenceManager.isTeacherLoggedIn=false
+                    sharedPreferenceManager.isStudentLoggedIn=false
+                    callBack()
+
+                }
+                else{
+                    commonLoading.alertMessage = response.message.handleNull()
+                }
+
+            } catch (e: Exception) {
+                println("Login Catch Error ${e.message}")
+                e.printStackTrace()
+            }
+        }
+
+    }
 
 
 

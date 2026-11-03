@@ -329,7 +329,7 @@ fun TeacherSideMenuScreen(
     dashboardViewModel: DashboardViewModel,
     dashboardRoutes: (String) -> Unit
 ) {
-    val teacherName = "Dr. Adnan"
+    val teacherName = dashboardViewModel.sharedPreferenceManager.getTeacher()?.name?:""
 
     val menu = listOf(
         SingleSideMenu("Archived", Res.drawable.ic_archived),

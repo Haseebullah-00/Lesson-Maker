@@ -36,9 +36,18 @@ suspend inline fun <reified T> HttpClient.safePost(
         throw ApiException(statusCode = e.response.status, customMessage =  e.response.bodyAsText(), apiName = urlString, parameters = e.response.request.url.parameters.toString())
     }catch (e: IOException) { // Other Errors (Timeout, No Internet, etc.)
         throw ApiException(statusCode = HttpStatusCode(0,""), customMessage =  "Time out", apiName = urlString)
+    } catch (e: IOException) {
+        println("safePost IO FAILED: ${e::class.qualifiedName} -> ${e.message}")
+        throw ApiException(statusCode = HttpStatusCode(0,""), customMessage = "Time out", apiName = urlString)
     }
-    catch (e: Exception) { // Other Errors (Timeout, No Internet, etc.)
-        throw ApiException(statusCode = HttpStatusCode(0,""), customMessage =  "canceled", apiName = urlString)
+    catch (e: Exception) {
+        println("safePost FAILED: ${e::class.qualifiedName} -> ${e.message}")
+        e.printStackTrace()
+        throw ApiException(
+            statusCode = HttpStatusCode(0, ""),
+            customMessage = e.message ?: "canceled",
+            apiName = urlString
+        )
     }
 }
 

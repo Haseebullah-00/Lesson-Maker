@@ -7,11 +7,16 @@ import androidx.lifecycle.viewModelScope
 import com.lessonmaker.app.authFLow.AuthAccountType
 import com.lessonmaker.app.base.ShareViewModelInterface
 import com.lessonmaker.app.base.SharedBaseViewModel
+import com.lessonmaker.app.common.dialogue.UiState
 import com.lessonmaker.app.common.isValidEmail
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
+import com.lessonmaker.app.extensionFunctions.checkForSuccess
+import com.lessonmaker.app.models.auth.StudentModel
+import com.lessonmaker.app.models.auth.TeacherModel
 import com.lessonmaker.app.network.ApiService
-
+import com.lessonmaker.app.network.getOnlySuccess
+import kotlinx.coroutines.launch
 
 
 class LoginVm(
@@ -21,8 +26,6 @@ class LoginVm(
 ) : SharedBaseViewModel<LoginVm.ScreenInterface>() {
 
     var accountType by mutableStateOf(AuthAccountType.Teacher)
-
-
 
     var email by mutableStateOf("")
     var emailError by mutableStateOf<String?>(null)
@@ -82,100 +85,75 @@ class LoginVm(
 
     }
 
-    fun sharePrefernce(){
-        if(accountType== AuthAccountType.Teacher){
-            sharedPreferenceManager.isTeacherLoggedIn=true
-            sharedPreferenceManager.isStudentLoggedIn=false
-            sharedPreferenceManager.isLoggedIn=true
-        }
-        else{
-            sharedPreferenceManager.isStudentLoggedIn=true
-            sharedPreferenceManager.isTeacherLoggedIn=false
-            sharedPreferenceManager.isLoggedIn=true
-        }
+    fun callLogInPI(callBack: () -> Unit) {
+        apiError = null
 
+        viewModelScope.launch {
+            try {
+                commonLoading.apiCall = UiState.Loading
+
+                val response = apiService.login(
+                    email = email,
+                    password = password,
+                    role =  if(accountType== AuthAccountType.Teacher) "Teacher" else "Student"
+
+                ).getOnlySuccess()
+
+                commonLoading.apiCall = UiState.Success(response!!)
+
+                if (response.status.checkForSuccess()) {
+                    sharedPreferenceManager.teacherUser = null
+                    sharedPreferenceManager.studentUser = null
+                    when (response.type?.trim()?.lowercase()) {
+
+                        "teacher" -> {
+                            val teacher = TeacherModel(
+                                id = response.data?.id ?: 0,
+                                name = response.data?.name ?: "",
+                                email = response.data?.email ?: ""
+                            )
+
+                            sharedPreferenceManager.saveTeacher(teacher)
+
+                            sharedPreferenceManager.isTeacherLoggedIn = true
+                            sharedPreferenceManager.isStudentLoggedIn = false
+                            sharedPreferenceManager.isLoggedIn = true
+
+                            callBack()
+                        }
+
+                        "student" -> {
+                            val student = StudentModel(
+                                id = response.data?.id ?: 0,
+                                name = response.data?.name ?: "",
+                                email = response.data?.email ?: "",
+                                aridNo = response.data?.aridNo ?: ""
+                            )
+
+                            sharedPreferenceManager.saveStudent(student)
+
+                            sharedPreferenceManager.isStudentLoggedIn = true
+                            sharedPreferenceManager.isTeacherLoggedIn = false
+                            sharedPreferenceManager.isLoggedIn = true
+
+                            callBack()
+                        }
+
+                        else -> {
+                            commonLoading.alertMessage = "Invalid account type: ${response.type}"
+                        }
+                    }
+
+
+                } else {
+                   commonLoading.alertMessage= response.message ?: ""
+                }
+            } catch (e: Exception) {
+                println("Login Catch Error ${e.message}")
+                e.printStackTrace()
+            }
+        }
     }
-
-
-
-
-//
-//    fun validateEmailAndPassword(
-//        enter_email_plz: String,
-//        enter_valid_email: String,
-//        plz_enter_password: String,
-//        password_not_valid: String
-//    ): Boolean {
-//        if (email.isBlank()) {
-//            emailError = enter_email_plz
-//            passwordError = null
-//            return false
-//        }
-//
-//        if (!email.isValidEmail()) {
-//            emailError = enter_valid_email
-//            passwordError = null
-//            return false
-//        }
-//
-//        emailError = null
-//
-//        if (password.isBlank()) {
-//            passwordError = plz_enter_password
-//            return false
-//        }
-//
-//        if (!password.isPasswordCorrect()) {
-//            passwordError = password_not_valid
-//            return false
-//        }
-//
-//        passwordError = null
-//        return true
-//    }
-
-
-
-
-
-
-//    fun callLogInWithEmailAPI(callBack: () -> Unit) {
-//        apiError = null
-//
-//        viewModelScope.launch {
-//            try {
-//                commonLoading.apiCall = UiState.Loading
-//
-//                val response = apiService.loginWithEmailApi(
-//                    email = email,
-//                    password = password
-//
-//                ).getOnlySuccess() ?: return@launch
-//
-//                commonLoading.apiCall = UiState.Success(response)
-//
-//                if (response.status.checkForSuccess()) {
-//                    if (response.status == "1") {
-//
-//                        sharedPreferenceManager.accessToken = response.oData?.token ?: ""
-//                        response.oData?.user?.let { user ->
-//                            sharedPreferenceManager.saveCurrentUser(user)
-//                        }
-//                        sharedPreferenceManager.isLoggedIn = true
-//                        callBack()
-//                    } else if (response.status == "0") {
-//                        apiError = response.message ?: ""
-//                    }
-//
-//                } else {
-//                    apiError = response.message ?: ""
-//                }
-//            } catch (e: Exception) {
-//                println("Login Catch Error ${e.message}")
-//                e.printStackTrace()
-//            }
-//        }
-//    }
 
 
 

@@ -1,18 +1,22 @@
 package com.lessonmaker.app.network
 
 
+import com.lessonmaker.app.common.dataCellSheetSpecs.UploadBundle
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
 import com.lessonmaker.app.extensionFunctions.handleNull
 import com.lessonmaker.app.models.CommonAPIResponse
+import com.lessonmaker.app.models.auth.LoginAPIResponse
 import com.lessonmaker.app.models.auth.OtpResponse
 import com.lessonmaker.app.models.book.BooksResponse
 import com.lessonmaker.app.shared.platformExtensions.deviceType
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.parameter
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
 import io.ktor.http.headers
 
 
@@ -36,17 +40,46 @@ class ApiService(
 
     suspend fun dataCellLogin(email: String, password: String): ApiResult<CommonAPIResponse> {
         return safeApiCall(commonLoading = commonLoading) {
-            client.safeGet(
-                urlString = NetworkUtils.BaseUrl.plus("DataCell/login"),
+            client.safePost(
+                urlString = NetworkUtils.BaseUrl.plus("AuthFlow/dataCellLogin"),
                 block = {
                     parameter("email", email)
                     parameter("password", password)
-                    parameter("device_type", deviceType())
+
 
                 }
             )
         }
     }
+
+    suspend fun uploadRecords(data: UploadBundle): ApiResult<CommonAPIResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safePost(
+                urlString = NetworkUtils.BaseUrl.plus("DataCell/importData"),
+                block = {
+                    contentType(io.ktor.http.ContentType.Application.Json)
+                    setBody(data)
+
+                }
+            )
+        }
+    }
+
+    suspend fun login(email: String, password: String,role: String): ApiResult<LoginAPIResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safePost(
+                urlString = NetworkUtils.BaseUrl.plus("AuthFlow/Login"),
+                block = {
+                    parameter("email", email)
+                    parameter("password", password)
+                    parameter("role",role)
+
+                }
+            )
+        }
+    }
+
+
 
 
     suspend fun getAllBooks(): ApiResult<BooksResponse> {

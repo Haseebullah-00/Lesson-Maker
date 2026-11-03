@@ -446,6 +446,7 @@ fun Navigations(
                 }
             }
         }
+        val teacherName = dashboardViewModel.sharedPreferenceManager.getTeacher()?.name?:""
 
         composable(DashboardSubScreen.TeacherMyCoursesScreenFlow.route) {
                 dashboardViewModel.toolBarViewModel.updateToolBar(
@@ -453,7 +454,7 @@ fun Navigations(
 
                     showBackText = true,
                     backHeading = "My Courses",
-                    subHeading = "Welcome back, Dr. Adnan",
+                    subHeading = "Welcome back, ${teacherName}",
                     showMenu = true
 
                 )
@@ -749,7 +750,7 @@ fun Navigations(
             }
         }
         composable(DashboardSubScreen.StudentMyCoursesScreenFLow.route) {
-            val name = StudentDummyStore.student.let { "${it.name} (${it.arid})" }
+            val name = dashboardViewModel.sharedPreferenceManager.getStudent().let { "${it?.name?:""} (${it?.aridNo?:""})" }
             dashboardViewModel.toolBarViewModel.updateToolBar(
                 showToolbar = true,
                 showBackText = true,

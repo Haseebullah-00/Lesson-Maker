@@ -61,8 +61,8 @@ fun StudentSideMenuScreen(
     dashboardRoutes: (String) -> Unit
 ) {
     val studentName = remember {
-        runCatching { dashboardViewModel.sharedPreferenceManager.getCurrentUser()?.name }
-            .getOrNull()?.takeIf { it.isNotBlank() } ?: StudentDummyStore.student.name
+        runCatching { dashboardViewModel.sharedPreferenceManager.getStudent()?.name }
+            .getOrNull()?.takeIf { it.isNotBlank() } ?: ""
     }
     val menu = listOf(SingleSideMenu("Edit Access", Res.drawable.edit_ic_new))
 

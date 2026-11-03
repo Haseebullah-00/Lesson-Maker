@@ -65,7 +65,7 @@ fun DialogButton(
     Box(
         modifier = modifier
             .background(
-                color = if (isNegative) secondaryColor else PrimaryColor,
+                color = if (isNegative) secondaryColor else fieldCursor,
                 shape = RoundedCornerShape(size = 10.dp)
             )
             .clickable { clicked.invoke(true) }, contentAlignment = Alignment.Center

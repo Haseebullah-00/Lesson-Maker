@@ -52,10 +52,11 @@ fun StudentProfileScreenFlow(
 ) {
     val dummy = StudentDummyStore.student
     val user = remember {
-        runCatching { dashboardViewModel.sharedPreferenceManager.getCurrentUser() }.getOrNull()
+        runCatching { dashboardViewModel.sharedPreferenceManager.getStudent() }.getOrNull()
     }
-    val name = user?.name?.takeIf { it.isNotBlank() } ?: dummy.name
-    val email = user?.email?.takeIf { it.isNotBlank() } ?: dummy.email
+    val name = user?.name?.takeIf { it.isNotBlank() } ?: ""
+    val email = user?.email?.takeIf { it.isNotBlank() } ?:""
+    val aridNo = user?.aridNo?.takeIf { it.isNotBlank() } ?:""
     val shape = RoundedCornerShape(12.dp)
 
     Column(
@@ -77,21 +78,23 @@ fun StudentProfileScreenFlow(
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(text = name, color = bgColor, style = TextSize16().bold())
-                    Spacer(Modifier.height(2.dp))
-                    Text(text = dummy.program, color = loginTabUnselectedTxtClr, style = TextSize12().Regular())
+                  //  Spacer(Modifier.height(2.dp))
+                    //Text(text = dummy.program, color = loginTabUnselectedTxtClr, style = TextSize12().Regular())
                 }
             }
             Spacer(Modifier.height(14.dp))
             Box(Modifier.fillMaxWidth().height(1.dp).background(fieldBorder))
             Spacer(Modifier.height(14.dp))
 
-            InfoRow("ARID Number", dummy.arid)
-            Spacer(Modifier.height(10.dp))
+            InfoRow("ARID Number", aridNo)
+            Spacer(Modifier.height(14.dp))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(fieldBorder))
+            Spacer(Modifier.height(14.dp))
             InfoRow("Email", email)
-            Spacer(Modifier.height(10.dp))
-            InfoRow("Department", dummy.department)
-            Spacer(Modifier.height(10.dp))
-            InfoRow("Semester", dummy.semester)
+//            Spacer(Modifier.height(10.dp))
+//            InfoRow("Department", dummy.department)
+//            Spacer(Modifier.height(10.dp))
+//            InfoRow("Semester", dummy.semester)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -115,6 +118,8 @@ fun StudentProfileScreenFlow(
                 dashboardViewModel.sharedPreferenceManager.isStudentLoggedIn = false
                 dashboardViewModel.sharedPreferenceManager.isTeacherLoggedIn = false
                 dashboardViewModel.sharedPreferenceManager.isLoggedIn=false
+                dashboardViewModel.sharedPreferenceManager.teacherUser = null
+                dashboardViewModel.sharedPreferenceManager.studentUser = null
                 dashboardRoutes.invoke(Screen.LoginScreenFlow.route)
             }
         )

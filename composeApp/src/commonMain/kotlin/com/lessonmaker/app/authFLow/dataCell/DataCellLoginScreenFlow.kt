@@ -150,6 +150,7 @@ fun DataCellLoginScreenFlow(newRouts: (String) -> Unit){
                         dataCellLoginVm.callLogInAPI(callBack = {
                             newRouts.invoke(Screen.DataCellUploadScreenFlow.route)
                         })
+
                     }
 
 

@@ -55,10 +55,10 @@ fun TeacherProfileScreenFlow(
 ) {
     // Use the saved user when available, otherwise show the design's sample data.
     val user = remember {
-        runCatching { dashboardViewModel.sharedPreferenceManager.getCurrentUser() }.getOrNull()
+        runCatching { dashboardViewModel.sharedPreferenceManager.getTeacher() }.getOrNull()
     }
-    val name = user?.name?.takeIf { it.isNotBlank() } ?: "Dr. Adnan Ahmed"
-    val email = user?.email?.takeIf { it.isNotBlank() } ?: "dr.adnan@biit.edu.pk"
+    val name = user?.name?.takeIf { it.isNotBlank() } ?: ""
+    val email = user?.email?.takeIf { it.isNotBlank() } ?: ""
     // SingleUserModel has no designation / department yet, so these are fixed for now.
     val designation = "Associate Professor, CS Dept"
     val department = "Computer Science"
@@ -88,12 +88,12 @@ fun TeacherProfileScreenFlow(
                         color = bgColor,
                         style = TextSize16().bold()
                     )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = designation,
-                        color = loginTabUnselectedTxtClr,
-                        style = TextSize12().Regular()
-                    )
+//                    Spacer(Modifier.height(2.dp))
+//                    Text(
+//                        text = designation,
+//                        color = loginTabUnselectedTxtClr,
+//                        style = TextSize12().Regular()
+//                    )
                 }
             }
 
@@ -103,7 +103,7 @@ fun TeacherProfileScreenFlow(
 
             InfoRow(label = "Email", value = email)
             Spacer(Modifier.height(10.dp))
-            InfoRow(label = "Department", value = department)
+            //InfoRow(label = "Department", value = department)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -132,6 +132,8 @@ fun TeacherProfileScreenFlow(
                 dashboardViewModel.sharedPreferenceManager.isStudentLoggedIn = false
                 dashboardViewModel.sharedPreferenceManager.isTeacherLoggedIn = false
                 dashboardViewModel.sharedPreferenceManager.isLoggedIn=false
+                dashboardViewModel.sharedPreferenceManager.teacherUser = null
+                dashboardViewModel.sharedPreferenceManager.studentUser = null
                 dashboardRoutes.invoke(Screen.LoginScreenFlow.route)
             }
         )

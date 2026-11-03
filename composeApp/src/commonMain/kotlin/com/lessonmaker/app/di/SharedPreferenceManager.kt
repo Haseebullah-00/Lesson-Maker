@@ -2,6 +2,8 @@ package com.lessonmaker.app.di
 import com.russhwolf.settings.Settings
 import com.lessonmaker.app.extensionFunctions.handleNull
 import com.lessonmaker.app.models.auth.SingleUserModel
+import com.lessonmaker.app.models.auth.StudentModel
+import com.lessonmaker.app.models.auth.TeacherModel
 
 import kotlinx.serialization.json.Json
 
@@ -15,6 +17,8 @@ class SharedPreferenceManager(private val settings: Settings) {
     private val DEVICE_CART_ID_KEY = "deviceCartID"
     private val TEMP_USER= "temp_user"
     private val Current_User="current_user"
+    private val TEACHER_USER = "teacher_user"
+    private val STUDENT_USER = "student_user"
 
     private val FCM_TOKEN="fcm_token"
 
@@ -67,6 +71,72 @@ class SharedPreferenceManager(private val settings: Settings) {
     fun getCurrentUser(): SingleUserModel?{
         return currentUser?.let { Json.decodeFromString(it) }
     }
+
+    // ---------------- TEACHER ----------------
+
+    var teacherUser: String?
+        get() = settings.getStringOrNull(TEACHER_USER)
+        set(value) {
+            if (value.isNullOrBlank()) {
+                settings.remove(TEACHER_USER)
+            } else {
+                settings.putString(TEACHER_USER, value)
+            }
+        }
+
+    fun saveTeacher(user: TeacherModel) {
+        teacherUser = Json.encodeToString(user)
+    }
+
+    fun getTeacher(): TeacherModel? {
+        val json = teacherUser
+
+        if (json.isNullOrBlank()) {
+            return null
+        }
+
+        return try {
+            Json.decodeFromString<TeacherModel>(json)
+        } catch (e: Exception) {
+            println("Teacher JSON Error: ${e.message}")
+            null
+        }
+    }
+
+    // ---------------- STUDENT ----------------
+
+    var studentUser: String?
+        get() = settings.getStringOrNull(STUDENT_USER)
+        set(value) = settings.putString(STUDENT_USER, value.handleNull())
+
+    fun saveStudent(user: StudentModel) {
+        val json = Json.encodeToString(user)
+
+        println("STUDENT JSON SAVED: $json")
+
+        studentUser = json
+
+        println("STUDENT JSON FROM PREFERENCES: $studentUser")
+    }
+
+    fun getStudent(): StudentModel? {
+        val json = studentUser
+
+        println("STUDENT JSON RETRIEVED: $json")
+
+        if (json.isNullOrBlank()) return null
+
+        return try {
+            Json.decodeFromString<StudentModel>(json)
+        } catch (e: Exception) {
+            println("STUDENT DECODING ERROR: ${e.message}")
+            null
+        }
+    }
+
+    // ---------------- CLEAR ----------------
+
+
 
     fun clear() {
         settings.clear()

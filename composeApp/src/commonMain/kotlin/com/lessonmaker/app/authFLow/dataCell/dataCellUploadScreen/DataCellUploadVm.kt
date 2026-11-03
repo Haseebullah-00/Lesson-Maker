@@ -9,10 +9,14 @@ import androidx.lifecycle.viewModelScope
 import com.lessonmaker.app.base.ShareViewModelInterface
 import com.lessonmaker.app.base.SharedBaseViewModel
 import com.lessonmaker.app.common.dataCellSheetSpecs.UploadBundle
+import com.lessonmaker.app.common.dialogue.UiState
 // copy the ShareViewModelInterface import from DataCellLoginVm.kt
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
+import com.lessonmaker.app.extensionFunctions.checkForSuccess
+import com.lessonmaker.app.extensionFunctions.handleNull
 import com.lessonmaker.app.network.ApiService
+import com.lessonmaker.app.network.getOnlySuccess
 import kotlinx.coroutines.launch
 
 class DataCellUploadVm(
@@ -29,28 +33,90 @@ class DataCellUploadVm(
         private set
 
     /** Called by the screen only after all three sheets passed the format check. */
-    fun uploadRecords(bundle: UploadBundle) {
+
+    fun uploadRecords(bundle: UploadBundle, callBack: () -> Unit) {
+
         if (isUploading) return
+
         viewModelScope.launch {
+
+            commonLoading.apiCall = UiState.Loading
             isUploading = true
-            statusMessage = null
-            isError = false
+
             try {
-                // TODO: replace with your real call, e.g.
-                // when (val result = apiService.uploadRecords(bundle)) {
-                //     is ApiResult.Success -> statusMessage = "Records committed successfully"
-                //     is ApiResult.Error -> { isError = true; statusMessage = result.message }
-                // }
-                statusMessage = "Ready: ${bundle.courses.size} courses, " +
-                        "${bundle.teachers.size} teachers, ${bundle.students.size} students"
+                println("STEP 1: Calling upload API")
+
+                val result = apiService.uploadRecords(data = bundle)
+
+                println("STEP 2: API function returned")
+                println("RESULT = $result")
+
+                val response = result.getOnlySuccess()
+
+                println("STEP 3: Response = $response")
+
+                if (response == null) {
+                    throw Exception("Upload response is null")
+                }
+
+                commonLoading.apiCall = UiState.Success(response)
+
+                println("STEP 4: Checking response status")
+
+                if (response.status.checkForSuccess()) {
+
+                    commonLoading.alertMessage = response.message ?: "Upload successful"
+                    callBack()
+
+                } else {
+                    commonLoading.alertMessage = response.message ?: "Upload failed"
+                }
+
             } catch (e: Exception) {
+
                 isError = true
                 statusMessage = e.message ?: "Upload failed"
+
+                println("UPLOAD ERROR: ${e.message}")
+                e.printStackTrace()
+
             } finally {
                 isUploading = false
             }
         }
     }
+
+//    fun uploadRecords(bundle: UploadBundle,callBack: () -> Unit) {
+//        if (isUploading) return
+//        viewModelScope.launch {
+//            commonLoading.apiCall = UiState.Loading
+//            isUploading = true
+//            statusMessage = null
+//            isError = false
+//            try {
+//                val response =
+//                    apiService.uploadRecords(
+//                        data = bundle
+//                    ).getOnlySuccess()
+//
+//                commonLoading.apiCall = UiState.Success(response!!)
+//                if (response?.status.checkForSuccess()) {
+//                    commonLoading.alertMessage=response.message?:""
+//                    callBack()
+//
+//                }
+//                else{
+//                    commonLoading.alertMessage=response.message?:""
+//                }
+//            } catch (e: Exception) {
+//                isError = true
+//                statusMessage = "${e::class.simpleName}: ${e.message}"
+//                println("UPLOAD ERROR: ${e.stackTraceToString()}")
+//            } finally {
+//                isUploading = false
+//            }
+//        }
+//    }
 
     fun clearStatus() {
         statusMessage = null

@@ -181,8 +181,10 @@ fun LoginScreenFlow(newRouts: (String) -> Unit)
 
                 MainButtonNew(heading = "Login") {
                   if(loginVm.isFormValid()){
-                      loginVm.sharePrefernce()
-                      newRouts.invoke(Screen.DashboardScreen.route)
+                      loginVm.callLogInPI(callBack = {
+                          newRouts.invoke(Screen.DashboardScreen.route)
+                      })
+
                   }
                 }
             }

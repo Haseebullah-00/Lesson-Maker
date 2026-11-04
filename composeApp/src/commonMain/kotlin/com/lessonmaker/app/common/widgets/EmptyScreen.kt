@@ -24,7 +24,11 @@ import com.lessonmaker.app.common.MainButton
 import com.lessonmaker.app.common.MainButton2
 import com.lessonmaker.app.theme.Regular
 import com.lessonmaker.app.theme.TextSize14
+import com.lessonmaker.app.theme.TextSize20
 import com.lessonmaker.app.theme.TextSize24
+import com.lessonmaker.app.theme.bgColor
+import com.lessonmaker.app.theme.bold
+import com.lessonmaker.app.theme.loginTabUnselectedTxtClr
 import com.lessonmaker.app.theme.semiBold
 import com.lessonmaker.app.theme.spaceBetweenFields
 import lessonmaker.composeapp.generated.resources.Res
@@ -66,8 +70,8 @@ fun EmptyScreen(
                     //Spacer(modifier = Modifier.height(15.dp))
                     Text(
                         text = message,
-                        style = TextSize24().semiBold(),
-                        color =  Color(0xFF111827),
+                        style = TextSize20().bold(),
+                        color =  bgColor,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = spaceBetweenFields),
                         textAlign = TextAlign.Center
                     )
@@ -77,7 +81,7 @@ fun EmptyScreen(
                     Text(
                         text = subHeading,
                         style = TextSize14().Regular(),
-                        color = Color(0xFF374151),
+                        color = loginTabUnselectedTxtClr,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = spaceBetweenFields),
                         textAlign = TextAlign.Center
                     )

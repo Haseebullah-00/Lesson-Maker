@@ -4,12 +4,12 @@ package com.lessonmaker.app.network
 import com.lessonmaker.app.common.dataCellSheetSpecs.UploadBundle
 import com.lessonmaker.app.di.CommonLoading
 import com.lessonmaker.app.di.SharedPreferenceManager
-import com.lessonmaker.app.extensionFunctions.handleNull
 import com.lessonmaker.app.models.CommonAPIResponse
 import com.lessonmaker.app.models.auth.LoginAPIResponse
-import com.lessonmaker.app.models.auth.OtpResponse
 import com.lessonmaker.app.models.book.BooksResponse
-import com.lessonmaker.app.shared.platformExtensions.deviceType
+import com.lessonmaker.app.models.teacher.TeacherMyCourseLessonApiResponse
+
+import com.lessonmaker.app.models.teacher.myCourses.TeacherMyCoursesApiResponse
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.parameter
@@ -73,6 +73,33 @@ class ApiService(
                     parameter("email", email)
                     parameter("password", password)
                     parameter("role",role)
+
+                }
+            )
+        }
+    }
+
+    suspend fun getTeacherMyCourses(teacherId: Int): ApiResult<TeacherMyCoursesApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Teacher/teacherCourses"),
+                block = {
+                    parameter("teacherId", teacherId)
+
+
+                }
+            )
+        }
+    }
+
+    suspend fun getTeacherMyCoursesLessons(teacherId: Int,courseId: Int): ApiResult<TeacherMyCourseLessonApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Teacher/getCourseLessons"),
+                block = {
+                    parameter("teacherId", teacherId)
+                    parameter("courseId",courseId)
+
 
                 }
             )

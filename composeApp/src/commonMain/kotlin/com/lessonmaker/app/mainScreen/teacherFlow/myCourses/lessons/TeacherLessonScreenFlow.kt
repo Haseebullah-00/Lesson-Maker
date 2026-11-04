@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,12 +20,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,10 +38,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.lessonmaker.app.base.BaseListWithRefresh
 import com.lessonmaker.app.common.MainButtonNew
+import com.lessonmaker.app.common.widgets.EmptyScreen
 import com.lessonmaker.app.mainScreen.DashboardViewModel
+
+
+import com.lessonmaker.app.models.teacher.TeacherMyCourseLessonData
 import com.lessonmaker.app.navigationControler.DashboardSubScreen
-import com.lessonmaker.app.shared.textkit.editor.core.transactions.models.TextEditorTransactionType
 import com.lessonmaker.app.theme.BackgorundColor
 import com.lessonmaker.app.theme.Regular
 import com.lessonmaker.app.theme.TextSize13
@@ -60,9 +65,13 @@ import com.lessonmaker.app.theme.semiBold
 import lessonmaker.composeapp.generated.resources.Res
 import lessonmaker.composeapp.generated.resources.delete_ic_new
 import lessonmaker.composeapp.generated.resources.edit_ic_new
+import lessonmaker.composeapp.generated.resources.ic_empty_courses
+import lessonmaker.composeapp.generated.resources.ic_empty_lessons
 import lessonmaker.composeapp.generated.resources.search_ic_new
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
+import kotlin.collections.emptyList
 
 @Composable
 fun TeacherLessonScreenFlow(
@@ -72,11 +81,20 @@ fun TeacherLessonScreenFlow(
     dashboardViewModel: DashboardViewModel,
     dashboardRoutes: (String) -> Unit
 ){
-    var query by remember { mutableStateOf("") }
-    val lessons = remember(courseId) {
-        mutableStateListOf<LessonItem>().apply { addAll(dummyLessons) }
+    val teacherLessonsVM = koinViewModel<TeacherLessonsVM>()
+    val teacherId = dashboardViewModel.sharedPreferenceManager.getTeacher()?.id?:0
+    val lazyListState = rememberLazyListState()
+    val lessons by teacherLessonsVM.lessons.collectAsState()
+
+    LaunchedEffect(Unit){
+        teacherLessonsVM.getAllLessons(teacherId = teacherId, courseId = courseId.toInt())
     }
-    val filtered = lessons.filter { it.title.contains(query, ignoreCase = true) }
+
+    var query by remember { mutableStateOf("") }
+////    val lessons = remember(courseId) {
+////        mutableStateListOf<LessonItem>().apply { addAll(dummyLessons) }
+////    }
+//    val filtered = lessons.filter { it.title.contains(query, ignoreCase = true) }
 
     Column(
         modifier = Modifier
@@ -84,39 +102,55 @@ fun TeacherLessonScreenFlow(
             .background(BackgorundColor)
             .imePadding()
     ) {
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                LessonSearchBar(query = query, onQueryChange = { query = it })
-            }
+        Spacer(modifier = Modifier.height(20.dp))
+        LessonSearchBar(query = query, onQueryChange = { query = it })
+        Spacer(modifier = Modifier.height(12.dp))
 
-            if (filtered.isEmpty()) {
-                item {
-                    Text(
-                        text = if (query.isEmpty()) "No lessons yet" else "No lessons found",
-                        color = loginTabUnselectedTxtClr,
-                        style = TextSize14().Regular(),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 32.dp)
-                    )
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            BaseListWithRefresh(
+                viewModel = teacherLessonsVM,
+                emptyView = {
+                    if (teacherLessonsVM.showEmptyScreen) {
+                        EmptyScreen(
+                            emptyImage = Res.drawable.ic_empty_lessons,
+                            message = "No lessons yet",
+                            subHeading = "Add your first lecture note to start sharing\n lessons with your students.",
+                            showHomeButton = false,
+                            imgModifier = Modifier.size(128.dp)
+                        ) {
+                            dashboardRoutes.invoke(DashboardSubScreen.LaunchHomeScreenFlow.route)
+                        }
+                    }
+                },
+                refreshCall = {
+                    teacherLessonsVM.getAllLessons(teacherId = teacherId, courseId = courseId.toInt())
+                }
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = lazyListState,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+
+                ) {
+
+                    items(lessons?:emptyList()) { lesson ->
+                        LessonCard(
+                            lesson = lesson,
+                            onDelete = { },
+                            onEdit = {  }
+                        )
+                    }
+
+
+
                 }
             }
 
-            items(filtered, key = { it.id }) { lesson ->
-                LessonCard(
-                    lesson = lesson,
-                    onDelete = { lessons.remove(lesson) },
-                    onEdit = {  }
-                )
-            }
-            item {
-                Spacer(modifier = Modifier.height(50.dp))
-            }
+
+
+
         }
 
 
@@ -146,6 +180,7 @@ private fun LessonSearchBar(query: String, onQueryChange: (String) -> Unit) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
                     .height(48.dp)
                     .background(White, shape)
                     .border(1.dp, fieldBorder, shape)
@@ -181,7 +216,7 @@ private fun LessonSearchBar(query: String, onQueryChange: (String) -> Unit) {
 
 @Composable
 private fun LessonCard(
-    lesson: LessonItem,
+    lesson: TeacherMyCourseLessonData?,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
@@ -196,13 +231,13 @@ private fun LessonCard(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = lesson.title,
+                text = lesson?.lessonTitle?:"",
                 color = bgColor,
                 style = TextSize14().semiBold()
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = lesson.date,
+                text = lesson?.createdAt?:"",
                 color = loginTabUnselectedTxtClr,
                 style = TextSize13().Regular()
             )

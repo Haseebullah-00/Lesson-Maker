@@ -59,3 +59,5 @@ fun <T : ShareViewModelInterface> BaseListWithRefresh(viewModel: SharedBaseViewM
         emptyView()
     }
 }
+
+

@@ -217,6 +217,7 @@ fun TextKitFormattingBarInternal(
                 value = barState.headingLevel == 1,
                 onClick = { onHeadingClick(1, it) }, backgroundColor = selectedColor
             )
+            //
             TextKitFormattingSeparator()
             TextKitTooltipTextItem(
                 tooltipText = "Heading 2", label = "H2",

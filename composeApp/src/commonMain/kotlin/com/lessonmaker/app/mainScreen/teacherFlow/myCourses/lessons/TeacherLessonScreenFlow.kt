@@ -139,7 +139,9 @@ fun TeacherLessonScreenFlow(
                         LessonCard(
                             lesson = lesson,
                             onDelete = { },
-                            onEdit = {  }
+                            onEdit = {
+                                dashboardRoutes.invoke(DashboardSubScreen.TeacherAddLessonScreenFLow.createRoute("",courseCode,courseName))
+                            }
                         )
                     }
 
@@ -158,7 +160,7 @@ fun TeacherLessonScreenFlow(
             Box(Modifier.fillMaxWidth().height(1.dp).background(greyE3))
             Box(modifier = Modifier.padding(16.dp)) {
                 MainButtonNew(heading = "+  Add Lecture Note") {
-                    dashboardRoutes.invoke(DashboardSubScreen.TeacherAddLessonScreenFLow.createRoute(courseId,courseCode,courseName))
+                    dashboardRoutes.invoke(DashboardSubScreen.TeacherAddLessonScreenFLow.createRoute("",courseCode,courseName))
 
                 }
             }

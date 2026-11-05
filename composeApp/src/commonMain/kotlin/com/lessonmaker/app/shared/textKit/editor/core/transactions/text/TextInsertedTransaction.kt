@@ -240,8 +240,22 @@ internal object TextInsertedTransaction {
                 TextRange(paragraph.startOffset + modelLength),
                 transactions
             )
+//        } else {
+//            val finalMarks = getMarksForInsertion(actionModel.marks)
+//            insertTextInParagraph(actionModel, finalMarks, lines.quoteDecoratorAt(actionModel.offset))
+//        }
         } else {
-            val finalMarks = getMarksForInsertion(actionModel.marks)
+            // Typing right AFTER a link must not extend the link: drop the link mark when the char
+            // before the caret is linked but the char after it is not.
+            val offset = actionModel.offset
+            val linkBefore = offset > 0 &&
+                    !runCatching { manager.getLink(offset - 1, offset).first }.getOrNull().isNullOrEmpty()
+            val linkAfter =
+                !runCatching { manager.getLink(offset, offset + 1).first }.getOrNull().isNullOrEmpty()
+            val finalMarks = getMarksForInsertion(
+                actionModel.marks,
+                filterLinkMarks = linkBefore && !linkAfter
+            )
             insertTextInParagraph(actionModel, finalMarks, lines.quoteDecoratorAt(actionModel.offset))
         }
     }

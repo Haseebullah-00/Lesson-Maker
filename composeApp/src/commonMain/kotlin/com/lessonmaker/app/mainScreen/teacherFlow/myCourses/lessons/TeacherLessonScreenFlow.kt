@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lessonmaker.app.base.BaseListWithRefresh
 import com.lessonmaker.app.common.MainButtonNew
+import com.lessonmaker.app.common.extensionFunctions.toDisplayDate
 import com.lessonmaker.app.common.widgets.EmptyScreen
 import com.lessonmaker.app.mainScreen.DashboardViewModel
 
@@ -239,7 +240,7 @@ private fun LessonCard(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = lesson?.createdAt?:"",
+                text = lesson?.createdAt.toDisplayDate(),
                 color = loginTabUnselectedTxtClr,
                 style = TextSize13().Regular()
             )

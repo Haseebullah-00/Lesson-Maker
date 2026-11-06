@@ -3,6 +3,7 @@
     <color name="transparent">#00ffffff</color>
     <color name="whiteColor">#ffffff</color>
     <color name="colorPrimary">#699FCE</color>
+    <color name="bgColor">#0F172A</color>
     <color name="black">#000000</color>
 
 </resources>

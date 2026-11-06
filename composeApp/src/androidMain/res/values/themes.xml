@@ -10,7 +10,7 @@
         <item name="bottomSheetDialogTheme">@style/BottomSheetDialogTheme</item>
     </style>
     <style name="ThemForSplash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/colorPrimary</item>
+        <item name="windowSplashScreenBackground">@color/bgColor</item>
         <item name="postSplashScreenTheme">@style/Theme.LessonMaker</item>
         <item name="windowSplashScreenAnimatedIcon">@color/transparent</item>
     </style>

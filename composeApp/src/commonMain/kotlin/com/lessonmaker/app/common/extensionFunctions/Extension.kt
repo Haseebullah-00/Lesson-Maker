@@ -56,7 +56,7 @@ import com.lessonmaker.app.theme.mainGradient
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
-
+import kotlinx.datetime.LocalDateTime
 
 @Composable
 fun TopButtonWithBackground(
@@ -381,5 +381,21 @@ fun CustomCheckBox(
 //            )
         }
     }
+
+
+}
+
+
+
+private val MONTHS = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+/** "2026-11-04T11:16:53.527" -> "Nov 04 2026" (null/invalid -> "") */
+fun String?.toDisplayDate(): String {
+    if (this.isNullOrBlank()) return ""
+    return runCatching {
+        val d = LocalDateTime.parse(this.trim().removeSuffix("Z").substringBefore('+')).date
+        "${MONTHS[d.monthNumber - 1]} ${d.dayOfMonth.toString().padStart(2, '0')} ${d.year}"
+    }.getOrDefault(this)   // if parsing fails, show the original text
 }
 

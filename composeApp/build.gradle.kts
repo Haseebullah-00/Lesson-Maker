@@ -44,8 +44,7 @@ kotlin {
     sourceSets {
         // ✅ Multiplatform (shared between Android & iOS)
         commonMain.dependencies {
-
-
+            implementation("io.github.kevinnzou:compose-webview-multiplatform:2.0.3")
 
             implementation(compose.runtime)
             implementation(compose.foundation)

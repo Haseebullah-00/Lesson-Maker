@@ -7,11 +7,15 @@ import com.lessonmaker.app.di.SharedPreferenceManager
 import com.lessonmaker.app.models.CommonAPIResponse
 import com.lessonmaker.app.models.auth.LoginAPIResponse
 import com.lessonmaker.app.models.book.BooksResponse
+import com.lessonmaker.app.models.student.StudentMyCoursesApiResponse
+import com.lessonmaker.app.models.student.lesson.StudentMyCourseLessonApiResponse
+import com.lessonmaker.app.models.student.lesson.lessonContent.StudentLessonContentApiResponse
 import com.lessonmaker.app.models.teacher.TeacherMyCourseLessonApiResponse
 
 import com.lessonmaker.app.models.teacher.myCourses.TeacherMyCoursesApiResponse
 
 import io.ktor.client.HttpClient
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -106,7 +110,73 @@ class ApiService(
         }
     }
 
+    suspend fun addLessonApi(teacherId: Int,courseId: Int,title: String,content: String): ApiResult<CommonAPIResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safePost(
+                urlString = NetworkUtils.BaseUrl.plus("Teacher/addLesson"),
+                block = {
+                    parameter("teacherId", teacherId)
+                    parameter("courseId",courseId)
+                    parameter("title",title)
+                    parameter("content",content)
 
+
+                }
+            )
+        }
+    }
+
+    suspend fun deleteLessonApi(
+        lessonId: Int
+    ): ApiResult<CommonAPIResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safePost(urlString = NetworkUtils.BaseUrl.plus("Teacher/deleteLesson"), block = {
+                parameter("lessonId", lessonId)
+
+            })
+        }
+    }
+
+
+
+    suspend fun getStudentMyCoursesApi(studentId: Int): ApiResult<StudentMyCoursesApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Student/studentCourses"),
+                block = {
+                    parameter("studentId", studentId)
+
+
+                }
+            )
+        }
+    }
+    suspend fun getStudentMyCoursesLessonsApi(teacherId: Int,courseId: Int,search: String): ApiResult<StudentMyCourseLessonApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Student/getStudentCoursesLesson"),
+                block = {
+                    parameter("teacherId", teacherId)
+                    parameter("courseId",courseId)
+                    parameter("search",search)
+
+
+                }
+            )
+        }
+    }
+
+    suspend fun getStudentMyCoursesLessonsContentApi(lessonId: Int): ApiResult<StudentLessonContentApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Student/getLessonContent"),
+                block = {
+                    parameter("lessonId", lessonId)
+
+                }
+            )
+        }
+    }
 
 
     suspend fun getAllBooks(): ApiResult<BooksResponse> {

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.lessonmaker.app.theme.ButtonBackgroundColor
 import com.lessonmaker.app.theme.Medium
 import com.lessonmaker.app.theme.PrimaryColor
+import com.lessonmaker.app.theme.REdF14336
 import com.lessonmaker.app.theme.TextSize13
 import com.lessonmaker.app.theme.TextSize16
 import com.lessonmaker.app.theme.TextSize17
@@ -65,7 +66,7 @@ fun DialogButton(
     Box(
         modifier = modifier
             .background(
-                color = if (isNegative) secondaryColor else fieldCursor,
+                color = if (isNegative) REdF14336 else fieldCursor,
                 shape = RoundedCornerShape(size = 10.dp)
             )
             .clickable { clicked.invoke(true) }, contentAlignment = Alignment.Center
@@ -73,7 +74,7 @@ fun DialogButton(
         Text(
             text = heading,
             style = TextSize16().Medium(),
-            color = if (isNegative) PrimaryColor else White,
+            color =  White,
             textAlign = TextAlign.Center
         )
     }

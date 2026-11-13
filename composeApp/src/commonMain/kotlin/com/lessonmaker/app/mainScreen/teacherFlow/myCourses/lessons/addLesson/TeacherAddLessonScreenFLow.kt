@@ -423,6 +423,7 @@ import com.lessonmaker.app.common.dialogue.playerDialogue.YouTubePlayerDialog
 import com.lessonmaker.app.common.lesson.imageEmbedJson
 import com.lessonmaker.app.common.lesson.uploadLessonImage
 import com.lessonmaker.app.mainScreen.DashboardViewModel
+import com.lessonmaker.app.navigationControler.DashboardSubScreen
 import com.lessonmaker.app.shared.media.rememberGalleryManager
 import com.lessonmaker.app.shared.rememberCameraManager
 import com.lessonmaker.app.shared.textkit.editor.core.parser.EmbedTypes
@@ -561,6 +562,7 @@ fun TeacherAddLessonScreenFLow(
     LaunchedEffect(state.lastMarks, state.lastListItem, state.lastEmbedType) {
         barState.syncFrom(state.lastMarks, state.lastListItem, state.lastEmbedType)
     }
+    val teacherId = dashboardViewModel.sharedPreferenceManager.getTeacher()?.id?:0
 
     fun insertPickedImage(bytes: ByteArray?, fileName: String) {
         if (bytes == null) return
@@ -663,12 +665,31 @@ fun TeacherAddLessonScreenFLow(
             // Save bar: stays at the bottom, hidden while the keyboard is open
             if (!imeVisible) {
                 Column(Modifier.fillMaxWidth().background(White).navigationBarsPadding()) {
-                    FormErrorText(addLessonVM.contentError)
+                    if(addLessonVM.titleError!=null){
+                        FormErrorText(addLessonVM.titleError)
+                    }
+                    else if(addLessonVM.contentError!=null){
+                        FormErrorText(addLessonVM.contentError)
+                    }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(greyE3))
                     Box(Modifier.padding(16.dp)) {
                         MainButtonNew(heading = "Save Lecture Note") {
-                            if (!addLessonVM.validate(state.textFieldValue.text)) return@MainButtonNew
                             val html = fixImageSrc(state.toHtml(), state.toJson())
+                            if (addLessonVM.validate(state.textFieldValue.text))
+                            {
+                                val courseIdInt = courseId.toIntOrNull()
+                                if (courseIdInt == null) {
+
+                                    return@MainButtonNew
+                                }
+                                addLessonVM.callAddLessonApi(teacherId = teacherId, courseId = courseId.toInt(),
+                                    title = addLessonVM.title,
+                                    content = html,
+                                    callBack = {
+                                        dashboardRoutes.invoke(DashboardSubScreen.POPBackStack.route)
+                                    })
+                            }
+
                             // TODO: call your API with addLessonVM.title and html
 
                             println("--------  HTML -----------")

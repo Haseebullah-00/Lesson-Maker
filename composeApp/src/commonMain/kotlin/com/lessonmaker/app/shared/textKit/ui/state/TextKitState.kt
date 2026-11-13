@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -1507,7 +1508,12 @@ class TextKitState(
                 link = LinkAnnotation.Url(
                     url = child.marks.filterIsInstance<LinkMark>().first().attrs.href,
                     styles = TextLinkStyles(
-                        child.createStyle(manager.configuration, highlightColor)
+                        child.createStyle(manager.configuration, highlightColor).merge(
+                            SpanStyle(
+                                color = Color(0xFF1A73E8),                 // blue
+                                textDecoration = TextDecoration.Underline
+                            )
+                        )
                     ),
                     linkInteractionListener = {
                         val url = (it as LinkAnnotation.Url).url

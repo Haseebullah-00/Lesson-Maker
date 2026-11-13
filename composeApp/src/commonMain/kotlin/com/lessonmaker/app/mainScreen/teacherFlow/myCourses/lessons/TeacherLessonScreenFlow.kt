@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lessonmaker.app.base.BaseListWithRefresh
 import com.lessonmaker.app.common.MainButtonNew
+import com.lessonmaker.app.common.dialogue.AlertMessageDialog
 import com.lessonmaker.app.common.extensionFunctions.toDisplayDate
 import com.lessonmaker.app.common.widgets.EmptyScreen
 import com.lessonmaker.app.mainScreen.DashboardViewModel
@@ -71,6 +72,7 @@ import lessonmaker.composeapp.generated.resources.ic_empty_lessons
 import lessonmaker.composeapp.generated.resources.search_ic_new
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.collections.emptyList
 
@@ -90,6 +92,8 @@ fun TeacherLessonScreenFlow(
     LaunchedEffect(Unit){
         teacherLessonsVM.getAllLessons(teacherId = teacherId, courseId = courseId.toInt())
     }
+    var selectedLessonId by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     var query by remember { mutableStateOf("") }
 ////    val lessons = remember(courseId) {
@@ -139,7 +143,11 @@ fun TeacherLessonScreenFlow(
                     items(lessons?:emptyList()) { lesson ->
                         LessonCard(
                             lesson = lesson,
-                            onDelete = { },
+                            onDelete = {
+                                selectedLessonId="${lesson.lessonId?:0}"
+                                showDeleteDialog=true
+
+                            },
                             onEdit = {
                                 dashboardRoutes.invoke(DashboardSubScreen.TeacherAddLessonScreenFLow.createRoute("",courseCode,courseName))
                             }
@@ -161,12 +169,28 @@ fun TeacherLessonScreenFlow(
             Box(Modifier.fillMaxWidth().height(1.dp).background(greyE3))
             Box(modifier = Modifier.padding(16.dp)) {
                 MainButtonNew(heading = "+  Add Lecture Note") {
-                    dashboardRoutes.invoke(DashboardSubScreen.TeacherAddLessonScreenFLow.createRoute("",courseCode,courseName))
+                    dashboardRoutes.invoke(DashboardSubScreen.TeacherAddLessonScreenFLow.createRoute(courseId = courseId,courseCode,courseName))
 
                 }
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
+    }
+    if (showDeleteDialog) {
+        AlertMessageDialog(
+            title = "Delete Lesson",
+            message = "Are you sure you want to delete this lesson?",
+            positiveButtonText = "Yes",
+            negativeButtonText = "No",
+            onClick = { isConfirmed ->
+                if (isConfirmed) {
+                    teacherLessonsVM.deleteLesson(selectedLessonId.toInt(), callBack = {
+                        teacherLessonsVM.getAllLessons(teacherId = teacherId, courseId = courseId.toInt())
+                    })
+                }
+                showDeleteDialog = false
+            }
+        )
     }
 
 }

@@ -776,6 +776,7 @@ fun Navigations(
             val courseId = it.arguments?.getString(DashboardSubScreen.StudentLessonsScreenFlow.COURSE_ID) ?: ""
             val courseCode = it.arguments?.getString(DashboardSubScreen.StudentLessonsScreenFlow.COURSE_CODE) ?: ""
             val courseName = it.arguments?.getString(DashboardSubScreen.StudentLessonsScreenFlow.COURSE_NAME) ?: ""
+            val teacherId = it.arguments?.getString(DashboardSubScreen.StudentLessonsScreenFlow.TEACHER_ID) ?: ""
             dashboardViewModel.toolBarViewModel.updateToolBar(
                 showToolbar = true,
                 showBackImage = true,
@@ -784,7 +785,7 @@ fun Navigations(
                 subHeading = courseName
             )
             dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
-            StudentLessonsScreenFlow(courseId, courseCode, courseName, dashboardViewModel){
+            StudentLessonsScreenFlow(courseId, courseCode, courseName, teacherId,dashboardViewModel){
                 navController.clearBackIfAtDashBoard(
                     newPath = it,
                     dashboardViewModel = dashboardViewModel

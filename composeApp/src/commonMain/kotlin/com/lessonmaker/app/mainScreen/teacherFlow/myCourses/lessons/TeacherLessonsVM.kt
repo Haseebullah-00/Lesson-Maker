@@ -66,5 +66,30 @@ class TeacherLessonsVM(
         }
     }
 
+    fun deleteLesson(id: Int, callBack: () -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                commonLoading.apiCall = UiState.Loading
+
+                val response = apiService.deleteLessonApi(
+                    lessonId  = id
+                ).getOnlySuccess()
+
+                commonLoading.apiCall = UiState.Success(response!!)
+
+                if (response.status.checkForSuccess()) {
+
+                    callBack()
+                } else {
+                    commonLoading.alertMessage = response.message ?: ""
+                }
+            } catch (e: Exception) {
+                println("Add Address Catch Error ${e.message}")
+                e.printStackTrace()
+                commonLoading.alertMessage = e.message ?: "Network error occurred"
+            }
+        }
+    }
+
     interface ScreenInterface : ShareViewModelInterface
 }

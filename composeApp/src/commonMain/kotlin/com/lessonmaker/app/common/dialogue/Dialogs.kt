@@ -50,6 +50,7 @@ import com.lessonmaker.app.theme.TextSize14
 import com.lessonmaker.app.theme.TextSize16
 import com.lessonmaker.app.theme.TextSize20
 import com.lessonmaker.app.theme.White
+import com.lessonmaker.app.theme.bold
 
 import kottieComposition.KottieCompositionSpec
 import kottieComposition.animateKottieCompositionAsState
@@ -164,7 +165,7 @@ fun AlertMessageDialog(
                 title?.let {
                     Text(
                         text = title,
-                        style = TextSize20(),
+                        style = TextSize20().bold(),
                         color = Black,
                         maxLines = 5,
                         textAlign = TextAlign.Center

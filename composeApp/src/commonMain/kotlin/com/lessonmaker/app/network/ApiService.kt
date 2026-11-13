@@ -11,6 +11,7 @@ import com.lessonmaker.app.models.student.StudentMyCoursesApiResponse
 import com.lessonmaker.app.models.student.lesson.StudentMyCourseLessonApiResponse
 import com.lessonmaker.app.models.student.lesson.lessonContent.StudentLessonContentApiResponse
 import com.lessonmaker.app.models.teacher.TeacherMyCourseLessonApiResponse
+import com.lessonmaker.app.models.teacher.archivedCourses.TeacherArchivedCoursesApiResponse
 
 import com.lessonmaker.app.models.teacher.myCourses.TeacherMyCoursesApiResponse
 
@@ -87,6 +88,19 @@ class ApiService(
         return safeApiCall(commonLoading = commonLoading) {
             client.safeGet(
                 urlString = NetworkUtils.BaseUrl.plus("Teacher/teacherCourses"),
+                block = {
+                    parameter("teacherId", teacherId)
+
+
+                }
+            )
+        }
+    }
+
+    suspend fun getTeacherArchivedCourses(teacherId: Int): ApiResult<TeacherArchivedCoursesApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Teacher/archivedCourses"),
                 block = {
                     parameter("teacherId", teacherId)
 

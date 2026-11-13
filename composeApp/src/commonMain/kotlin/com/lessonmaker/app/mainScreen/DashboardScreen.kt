@@ -56,6 +56,8 @@ import com.lessonmaker.app.mainScreen.teacherFlow.requests.reviewEditRequestScre
 import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.allowAccess.AllowAccessScreenFlow
 import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.allowedAccess.AllowedAccessScreenFlow
 import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.archived.TeacherArchivedScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.archived.lessons.TeacherArchivedLessonScreenFlow
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.archived.lessons.addLesson.TeacherAddArchivedLessonScreenFLow
 import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.colleaguesCourses.ColleaguesCoursesScreenFlow
 import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.colleaguesCourses.addColleaguesCourses.AddColleaguesCoursesScreenFlow
 import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.notesApprovals.NotesApprovalsScreenFlow
@@ -514,6 +516,43 @@ fun Navigations(
             }
         }
 
+
+
+        composable(DashboardSubScreen.TeacherArchivedLessonScreenFlow.BASE_ROUTE) {
+            val courseId =
+                it.arguments?.getString(DashboardSubScreen.TeacherLessonScreenFlow.COURSE_ID) ?: ""
+            val courseCode =
+                it.arguments?.getString(DashboardSubScreen.TeacherLessonScreenFlow.COURSE_CODE) ?: ""
+            val courseTitle =
+                it.arguments?.getString(DashboardSubScreen.TeacherLessonScreenFlow.COURSE_NAME) ?: ""
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackImage = true,
+                showBackText = true,
+                backHeading = "$courseCode Lecture Notes",
+                subHeading = courseTitle
+            )
+
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            TeacherArchivedLessonScreenFlow(courseId = courseId, courseCode = courseCode, courseName = courseTitle,dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> {
+                            mainNavigationRoute.invoke(newRoute)
+                        }
+
+                        else -> {
+                            navController.navigate(newRoute)
+                        }
+                    }
+
+                }
+            }
+        }
+
         composable(DashboardSubScreen.TeacherAddLessonScreenFLow.BASE_ROUTE) {
             val courseId =
                 it.arguments?.getString(DashboardSubScreen.TeacherAddLessonScreenFLow.COURSE_ID) ?: ""
@@ -531,6 +570,41 @@ fun Navigations(
 
             dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
             TeacherAddLessonScreenFLow(courseId = courseId, courseCode = courseCode, courseName = courseTitle,dashboardViewModel = dashboardViewModel) {
+                navController.clearBackIfAtDashBoard(
+                    newPath = it,
+                    dashboardViewModel = dashboardViewModel
+                )?.let { newRoute ->
+                    when {
+                        newRoute == Screen.LoginScreenFlow.route -> {
+                            mainNavigationRoute.invoke(newRoute)
+                        }
+
+                        else -> {
+                            navController.navigate(newRoute)
+                        }
+                    }
+
+                }
+            }
+        }
+
+        composable(DashboardSubScreen.TeacherAddArchivedLessonScreenFLow.BASE_ROUTE) {
+            val courseId =
+                it.arguments?.getString(DashboardSubScreen.TeacherAddLessonScreenFLow.COURSE_ID) ?: ""
+            val courseCode =
+                it.arguments?.getString(DashboardSubScreen.TeacherAddLessonScreenFLow.COURSE_CODE) ?: ""
+            val courseTitle =
+                it.arguments?.getString(DashboardSubScreen.TeacherAddLessonScreenFLow.COURSE_NAME) ?: ""
+            dashboardViewModel.toolBarViewModel.updateToolBar(
+                showToolbar = true,
+                showBackImage = true,
+                showBackText = true,
+                backHeading = "New Lecture Notes",
+                subHeading = "Course: ${courseCode}${courseTitle}"
+            )
+
+            dashboardViewModel.updateBottomNavigation(showBottomNavigation = false)
+            TeacherAddArchivedLessonScreenFLow(courseId = courseId, courseCode = courseCode, courseName = courseTitle,dashboardViewModel = dashboardViewModel) {
                 navController.clearBackIfAtDashBoard(
                     newPath = it,
                     dashboardViewModel = dashboardViewModel

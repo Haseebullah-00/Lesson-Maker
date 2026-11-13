@@ -11,6 +11,7 @@ import com.lessonmaker.app.mainScreen.studentFlow.myCourses.lessons.lessonConten
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.TeacherMyCoursesVM
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.TeacherLessonsVM
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.addLesson.TeacherAddLessonVM
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.archived.TeacherArchivedCoursesVM
 import com.lessonmaker.app.network.ApiService
 import com.lessonmaker.app.network.provideHttpClient
 import com.picket.app.authFlow.screen.login.DataCellLoginVm
@@ -48,6 +49,7 @@ val appModule = module {
     viewModelOf(::TeacherMyCoursesVM)
     viewModelOf(::TeacherLessonsVM)
     viewModelOf(::TeacherAddLessonVM)
+    viewModelOf(::TeacherArchivedCoursesVM)
 
     viewModelOf(::StudentMyCoursesVM)
     viewModelOf(::StudentLessonVM)

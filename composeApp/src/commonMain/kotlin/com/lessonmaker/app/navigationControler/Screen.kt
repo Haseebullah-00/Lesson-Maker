@@ -128,6 +128,30 @@ sealed class DashboardSubScreen(val route: String) {
         }
     }
 
+    @Serializable
+    data class TeacherArchivedLessonScreenFlow(
+        val courseId: String,
+        val courseCode: String,
+        val courseName: String
+    ) : DashboardSubScreen(START_ROUTE) {
+
+        companion object {
+            const val START_ROUTE = "TeacherArchivedLessonScreenFlow"
+            const val COURSE_ID = "courseId"
+            const val COURSE_CODE = "courseCode"
+            const val COURSE_NAME = "courseName"
+
+            const val BASE_ROUTE =
+                "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}"
+
+            fun createRoute(
+                courseId: String,
+                courseCode: String,
+                courseName: String
+            ) = "$START_ROUTE/$courseId/$courseCode/$courseName"
+        }
+    }
+
 
     @Serializable
     data class  TeacherAddLessonScreenFLow(
@@ -150,6 +174,33 @@ sealed class DashboardSubScreen(val route: String) {
                 courseCode: String,
                 courseName: String
             ) = "$START_ROUTE/$courseId/$courseCode/$courseName"
+        }
+    }
+
+    @Serializable
+    data class  TeacherAddArchivedLessonScreenFLow(
+        val courseId: String,
+        val courseCode: String,
+        val courseName: String
+    ) : DashboardSubScreen(START_ROUTE) {
+
+        companion object {
+            const val START_ROUTE = "TeacherAddArchivedLessonScreenFLow"
+            const val COURSE_ID = "courseId"
+            const val COURSE_CODE = "courseCode"
+            const val COURSE_NAME = "courseName"
+            const val LESSON_ID = "lessonId"
+
+
+            const val BASE_ROUTE =
+                "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}/{$LESSON_ID}"
+
+            fun createRoute(
+                courseId: String,
+                courseCode: String,
+                courseName: String,
+                lessonId: String
+            ) = "$START_ROUTE/$courseId/$courseCode/$courseName/$lessonId"
         }
     }
 

@@ -22,8 +22,12 @@ import androidx.compose.ui.unit.dp
 import com.lessonmaker.app.common.AppDropdownField
 import com.lessonmaker.app.common.AppSearchField
 import com.lessonmaker.app.common.MainButtonNew
+import com.lessonmaker.app.common.bottomSheets.BottomSheetCommonInterface
+import com.lessonmaker.app.common.bottomSheets.courseSelectionBottomSheet.CourseSelectionBottomSheet
 import com.lessonmaker.app.mainScreen.DashboardViewModel
+import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.TeacherMyCoursesVM
 import com.lessonmaker.app.theme.*
+import org.koin.compose.viewmodel.koinViewModel
 
 data class AccessStudent(val id: Int, val name: String, val arid: String)
 
@@ -32,8 +36,10 @@ fun AllowAccessScreenFlow(
     dashboardViewModel: DashboardViewModel,
     dashboardRoutes: (String) -> Unit
 ) {
+    val teacherMyCoursesVM= koinViewModel<TeacherMyCoursesVM>()
+    val teacherId = dashboardViewModel.sharedPreferenceManager.getTeacher()?.id?:0
 
-    val courses = remember { listOf("Programming Fundamentals", "Object Oriented Programming","Data Structure $ Algorithms") }
+   // val courses = remember { listOf("Programming Fundamentals", "Object Oriented Programming","Data Structure $ Algorithms") }
     val students = remember {
         listOf(
             AccessStudent(1, "Muhammad Zain", "25-ARID-1148-BSCS"),
@@ -41,6 +47,12 @@ fun AllowAccessScreenFlow(
             AccessStudent(3, "Haris Saleem", "25-ARID-1002-BSCS"),
         )
     }
+    LaunchedEffect(Unit){
+        teacherMyCoursesVM.getAllCourses(teacherId = teacherId)
+    }
+
+    val courses by teacherMyCoursesVM.courses.collectAsState()
+    var showSheet by remember { mutableStateOf(false) }
 
     var selectedCourse by remember { mutableStateOf("") }
     var courseError by remember { mutableStateOf<String?>(null) }
@@ -54,43 +66,27 @@ fun AllowAccessScreenFlow(
         it.name.contains(query, ignoreCase = true) || it.arid.contains(query, ignoreCase = true)
     }
 
+
+
     Column(Modifier.fillMaxSize().background(White)) {
         Column(
             modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Dropdown: field only displays; the menu is handled here via onClick
+
             Box(Modifier.onSizeChanged { fieldWidthPx = it.width }) {
                 AppDropdownField(
-                    text = selectedCourse,
+                    text = teacherMyCoursesVM.selectedCourse?.courseName?:"",
                     hint = "Select the course you want to give access",
                     errorMessage = courseError,
                     onClick = {
-                        menuOpen = true
+                       showSheet = true
                     },
                     onClear = {
-                        selectedCourse = ""
+                       teacherMyCoursesVM.selectedCourse =null
                         courseError = null
                     }
                 )
-                DropdownMenu(
-                    expanded = menuOpen,
-                    onDismissRequest = { menuOpen = false },
-                    modifier = Modifier
-                        .width(with(density) { fieldWidthPx.toDp() })
-                        .background(White)
-                ) {
-                    courses.forEach { c ->
-                        DropdownMenuItem(
-                            text = { Text(c, color = fieldText, style = TextSize14()) },
-                            onClick = {
-                                selectedCourse = c
-                                courseError = null
-                                menuOpen = false
-                            }
-                        )
-                    }
-                }
             }
 
             AppSearchField(
@@ -138,5 +134,18 @@ fun AllowAccessScreenFlow(
             }
         }
         Spacer(Modifier.height(10.dp))
+    }
+    if (showSheet) {
+        CourseSelectionBottomSheet(
+            selectedCourse = teacherMyCoursesVM.selectedCourse,
+            courseList = courses,
+            commonInterface = object : BottomSheetCommonInterface {
+                override fun closeSheet() { showSheet = false }
+            },
+            onSubmit = {
+                teacherMyCoursesVM.selectedCourse = it
+                showSheet = false
+            }
+        )
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lessonmaker.app.common.dialogue.playerDialogue.YouTubePlayRequest
 import com.lessonmaker.app.common.dialogue.playerDialogue.YouTubePlayerDialog
+import com.lessonmaker.app.common.lesson.resolveLessonImageUrls
 import com.lessonmaker.app.shared.textkit.editor.models.createTextKitConfiguration
 import com.lessonmaker.app.shared.textkit.theme.TextKitTheme
 import com.lessonmaker.app.shared.textkit.ui.TextKitViewer
@@ -38,7 +39,7 @@ fun StudentLessonHtmlViewer(
     val state = rememberTextKitState(json = "{}", configuration = config)
     var playRequest by remember { mutableStateOf<YouTubePlayRequest?>(null) }
 
-    LaunchedEffect(lessonHtml) { state.importHtml(lessonHtml) }
+    LaunchedEffect(lessonHtml) { state.importHtml(resolveLessonImageUrls(lessonHtml)) }
 
     TextKitTheme(darkTheme = false) {
         TextKitViewer(

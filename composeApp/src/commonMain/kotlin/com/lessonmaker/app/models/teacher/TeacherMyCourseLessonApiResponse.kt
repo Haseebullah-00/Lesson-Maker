@@ -22,3 +22,8 @@ data class TeacherMyCourseLessonData(
     val createdAt: String?=null,
 
     )
+@Serializable
+data class AddLessonRequest(
+    val title: String,
+    val content: String,
+)

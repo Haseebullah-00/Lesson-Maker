@@ -1,6 +1,7 @@
 package com.lessonmaker.app.common.lesson
 
 
+import com.lessonmaker.app.network.NetworkUtils
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
@@ -39,3 +40,5 @@ fun imageEmbedJson(url: String): String {
     val safe = url.replace("\\", "\\\\").replace("\"", "\\\"")
     return """{"type":"image","attrs":{"url":"$safe"}}"""
 }
+fun resolveLessonImageUrls(html: String): String =
+    html.replace("src=\"/api/", "src=\"" + NetworkUtils.BaseUrl)

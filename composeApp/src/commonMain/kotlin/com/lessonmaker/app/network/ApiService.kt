@@ -10,6 +10,7 @@ import com.lessonmaker.app.models.book.BooksResponse
 import com.lessonmaker.app.models.student.StudentMyCoursesApiResponse
 import com.lessonmaker.app.models.student.lesson.StudentMyCourseLessonApiResponse
 import com.lessonmaker.app.models.student.lesson.lessonContent.StudentLessonContentApiResponse
+import com.lessonmaker.app.models.teacher.AddLessonRequest
 import com.lessonmaker.app.models.teacher.TeacherMyCourseLessonApiResponse
 import com.lessonmaker.app.models.teacher.archivedCourses.TeacherArchivedCoursesApiResponse
 
@@ -123,22 +124,35 @@ class ApiService(
             )
         }
     }
-
-    suspend fun addLessonApi(teacherId: Int,courseId: Int,title: String,content: String): ApiResult<CommonAPIResponse> {
+    suspend fun addLessonApi(teacherId: Int, courseId: Int, title: String, content: String): ApiResult<CommonAPIResponse> {
         return safeApiCall(commonLoading = commonLoading) {
             client.safePost(
                 urlString = NetworkUtils.BaseUrl.plus("Teacher/addLesson"),
                 block = {
-                    parameter("teacherId", teacherId)
-                    parameter("courseId",courseId)
-                    parameter("title",title)
-                    parameter("content",content)
-
-
+                    parameter("teacherId", teacherId)      // short values can stay in the URL
+                    parameter("courseId", courseId)
+                    contentType(io.ktor.http.ContentType.Application.Json)
+                    setBody(AddLessonRequest(title = title, content = content))
                 }
             )
         }
     }
+
+//    suspend fun addLessonApi(teacherId: Int,courseId: Int,title: String,content: String): ApiResult<CommonAPIResponse> {
+//        return safeApiCall(commonLoading = commonLoading) {
+//            client.safePost(
+//                urlString = NetworkUtils.BaseUrl.plus("Teacher/addLesson"),
+//                block = {
+//                    parameter("teacherId", teacherId)
+//                    parameter("courseId",courseId)
+//                    parameter("title",title)
+//                    parameter("content",content)
+//
+//
+//                }
+//            )
+//        }
+//    }
 
     suspend fun deleteLessonApi(
         lessonId: Int

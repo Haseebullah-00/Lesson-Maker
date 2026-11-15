@@ -421,6 +421,7 @@ import com.lessonmaker.app.common.dialogue.linkDialouge.TextKitLinkDialog
 import com.lessonmaker.app.common.dialogue.playerDialogue.YouTubePlayRequest
 import com.lessonmaker.app.common.dialogue.playerDialogue.YouTubePlayerDialog
 import com.lessonmaker.app.common.lesson.imageEmbedJson
+import com.lessonmaker.app.common.lesson.resolveLessonImageUrls
 import com.lessonmaker.app.common.lesson.uploadLessonImage
 import com.lessonmaker.app.mainScreen.DashboardViewModel
 import com.lessonmaker.app.navigationControler.DashboardSubScreen
@@ -553,7 +554,7 @@ fun TeacherAddLessonScreenFLow(
         if (initialTitle.isNotEmpty()) addLessonVM.setInitialTitle(initialTitle)
     }
     LaunchedEffect(initialContentHtml) {
-        if (initialContentHtml.isNotBlank()) state.importHtml(initialContentHtml)
+        if (initialContentHtml.isNotBlank()) state.importHtml(resolveLessonImageUrls(initialContentHtml))
     }
 
     LaunchedEffect(state.textFieldValue.text) {

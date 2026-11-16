@@ -157,7 +157,8 @@ sealed class DashboardSubScreen(val route: String) {
     data class  TeacherAddLessonScreenFLow(
         val courseId: String,
         val courseCode: String,
-        val courseName: String
+        val courseName: String,
+       val  lessonId: String
     ) : DashboardSubScreen(START_ROUTE) {
 
         companion object {
@@ -165,15 +166,17 @@ sealed class DashboardSubScreen(val route: String) {
             const val COURSE_ID = "courseId"
             const val COURSE_CODE = "courseCode"
             const val COURSE_NAME = "courseName"
+            const val LESSON_ID = "lessonId"
 
             const val BASE_ROUTE =
-                "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}"
+                "$START_ROUTE/{$COURSE_ID}/{$COURSE_CODE}/{$COURSE_NAME}/{$LESSON_ID}"
 
             fun createRoute(
                 courseId: String,
                 courseCode: String,
-                courseName: String
-            ) = "$START_ROUTE/$courseId/$courseCode/$courseName"
+                courseName: String,
+                lessonId: String
+            ) = "$START_ROUTE/$courseId/$courseCode/$courseName/$lessonId"
         }
     }
 

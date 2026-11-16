@@ -399,10 +399,12 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -424,6 +426,9 @@ import com.lessonmaker.app.common.lesson.imageEmbedJson
 import com.lessonmaker.app.common.lesson.resolveLessonImageUrls
 import com.lessonmaker.app.common.lesson.uploadLessonImage
 import com.lessonmaker.app.mainScreen.DashboardViewModel
+import com.lessonmaker.app.mainScreen.studentFlow.StudentDummyStore
+import com.lessonmaker.app.mainScreen.studentFlow.myCourses.lessons.lessonContent.StudentLessonContentVM
+import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.TeacherLessonsVM
 import com.lessonmaker.app.navigationControler.DashboardSubScreen
 import com.lessonmaker.app.shared.media.rememberGalleryManager
 import com.lessonmaker.app.shared.rememberCameraManager
@@ -521,13 +526,27 @@ fun TeacherAddLessonScreenFLow(
     courseId: String,
     courseCode: String,
     courseName: String,
+    lessonId: String,
     dashboardViewModel: DashboardViewModel,
     dashboardRoutes: (String) -> Unit,
 
     ) {
-    // EDIT MODE: pass the saved lesson here (backend returns HTML). Defaults = empty.
-    var   initialTitle: String = ""
-    var  initialContentHtml: String = ""
+
+    val teacherId = dashboardViewModel.sharedPreferenceManager.getTeacher()?.id?:0
+
+    val studentLessonContentVM = koinViewModel<StudentLessonContentVM>()
+    val lessonContent by studentLessonContentVM.lessonContent.collectAsState()
+
+    LaunchedEffect(lessonId) {
+        lessonId.toIntOrNull()?.takeIf { it > 0 }?.let {
+            studentLessonContentVM.getLessonContent(lessonId = it)
+        }
+    }
+
+    val isEdit = (lessonId.toIntOrNull() ?: 0) > 0
+    val initialTitle = if (isEdit) lessonContent?.lessonTitle?:"" else ""
+    val initialContentHtml = if (isEdit) lessonContent?.lessonContent?:"" else ""
+
     val addLessonVM = koinViewModel<TeacherAddLessonVM>()
     val scope = rememberCoroutineScope()
     val barState = rememberTextKitFormattingBarState(colors = TextKitPickerPallete.DefaultPallete)
@@ -563,7 +582,7 @@ fun TeacherAddLessonScreenFLow(
     LaunchedEffect(state.lastMarks, state.lastListItem, state.lastEmbedType) {
         barState.syncFrom(state.lastMarks, state.lastListItem, state.lastEmbedType)
     }
-    val teacherId = dashboardViewModel.sharedPreferenceManager.getTeacher()?.id?:0
+
 
     fun insertPickedImage(bytes: ByteArray?, fileName: String) {
         if (bytes == null) return
@@ -674,21 +693,34 @@ fun TeacherAddLessonScreenFLow(
                     }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(greyE3))
                     Box(Modifier.padding(16.dp)) {
-                        MainButtonNew(heading = "Save Lecture Note") {
+                        MainButtonNew(heading =if(isEdit) "Edit Lecture Note" else  "Save Lecture Note") {
                             val html = fixImageSrc(state.toHtml(), state.toJson())
                             if (addLessonVM.validate(state.textFieldValue.text))
                             {
-                                val courseIdInt = courseId.toIntOrNull()
-                                if (courseIdInt == null) {
+                                if(isEdit){
+                                    addLessonVM.callEditLessonApi( lessonId = lessonId.toInt(),
+                                        title = addLessonVM.title,
+                                        content = html,
+                                        callBack = {
+                                            dashboardRoutes.invoke(DashboardSubScreen.POPBackStack.route)
+                                        })
 
-                                    return@MainButtonNew
                                 }
-                                addLessonVM.callAddLessonApi(teacherId = teacherId, courseId = courseId.toInt(),
-                                    title = addLessonVM.title,
-                                    content = html,
-                                    callBack = {
-                                        dashboardRoutes.invoke(DashboardSubScreen.POPBackStack.route)
-                                    })
+                                else{
+                                    val courseIdInt = courseId.toIntOrNull()
+                                    if (courseIdInt == null) {
+
+                                        return@MainButtonNew
+                                    }
+                                    addLessonVM.callAddLessonApi(teacherId = teacherId, courseId = courseId.toInt(),
+                                        title = addLessonVM.title,
+                                        content = html,
+                                        callBack = {
+                                            dashboardRoutes.invoke(DashboardSubScreen.POPBackStack.route)
+                                        })
+
+                                }
+
                             }
 
                             // TODO: call your API with addLessonVM.title and html

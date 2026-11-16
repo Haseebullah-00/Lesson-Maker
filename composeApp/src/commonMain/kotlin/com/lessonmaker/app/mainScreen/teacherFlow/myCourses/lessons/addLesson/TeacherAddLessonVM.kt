@@ -83,6 +83,35 @@ class TeacherAddLessonVM(
     }
 
 
+    fun callEditLessonApi(lessonId: Int, title:String,content:String,callBack: () -> Unit) {
+
+
+        viewModelScope.launch {
+            try {
+                commonLoading.apiCall = UiState.Loading
+
+                val response = apiService.editLessonApi(
+                   lessonId = lessonId,
+                    title = title,
+                    content = content
+                ).getOnlySuccess()
+
+                commonLoading.apiCall = UiState.Success(response!!)
+
+                if (response.status.checkForSuccess()) {
+                    commonLoading.alertMessage= response.message ?: ""
+                    callBack()
+                } else {
+                    commonLoading.alertMessage= response.message ?: ""
+                }
+            } catch (e: Exception) {
+                println("Login Catch Error ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+
 
 
     interface ScreenInterface : ShareViewModelInterface

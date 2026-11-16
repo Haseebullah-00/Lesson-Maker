@@ -138,6 +138,19 @@ class ApiService(
         }
     }
 
+    suspend fun editLessonApi(lessonId: Int, title: String, content: String): ApiResult<CommonAPIResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safePost(
+                urlString = NetworkUtils.BaseUrl.plus("Teacher/editLesson"),
+                block = {
+                    parameter("lessonId", lessonId)
+                    contentType(io.ktor.http.ContentType.Application.Json)
+                    setBody(AddLessonRequest(title = title, content = content))
+                }
+            )
+        }
+    }
+
 //    suspend fun addLessonApi(teacherId: Int,courseId: Int,title: String,content: String): ApiResult<CommonAPIResponse> {
 //        return safeApiCall(commonLoading = commonLoading) {
 //            client.safePost(

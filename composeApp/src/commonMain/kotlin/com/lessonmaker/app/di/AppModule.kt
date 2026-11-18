@@ -5,12 +5,16 @@ import com.lessonmaker.app.authFLow.AllBooksVM
 import com.lessonmaker.app.authFLow.dataCell.dataCellUploadScreen.DataCellUploadVm
 import com.russhwolf.settings.Settings
 import com.lessonmaker.app.mainScreen.DashboardViewModel
+import com.lessonmaker.app.mainScreen.studentFlow.editAccess.StudentEditAccessVM
+import com.lessonmaker.app.mainScreen.studentFlow.editAccess.lessons.StudentEditCourseLessonVM
 import com.lessonmaker.app.mainScreen.studentFlow.myCourses.StudentMyCoursesVM
 import com.lessonmaker.app.mainScreen.studentFlow.myCourses.lessons.StudentLessonVM
 import com.lessonmaker.app.mainScreen.studentFlow.myCourses.lessons.lessonContent.StudentLessonContentVM
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.TeacherMyCoursesVM
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.TeacherLessonsVM
 import com.lessonmaker.app.mainScreen.teacherFlow.myCourses.lessons.addLesson.TeacherAddLessonVM
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.allowAccess.AllowAccessVM
+import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.allowedAccess.AllowedAccessVM
 import com.lessonmaker.app.mainScreen.teacherFlow.sideBar.archived.TeacherArchivedCoursesVM
 import com.lessonmaker.app.network.ApiService
 import com.lessonmaker.app.network.provideHttpClient
@@ -50,6 +54,11 @@ val appModule = module {
     viewModelOf(::TeacherLessonsVM)
     viewModelOf(::TeacherAddLessonVM)
     viewModelOf(::TeacherArchivedCoursesVM)
+    viewModelOf(::AllowAccessVM)
+    viewModelOf(:: AllowedAccessVM)
+    viewModelOf(::StudentEditAccessVM)
+    viewModelOf(::StudentEditCourseLessonVM)
+
 
     viewModelOf(::StudentMyCoursesVM)
     viewModelOf(::StudentLessonVM)

@@ -7,7 +7,10 @@ import com.lessonmaker.app.di.SharedPreferenceManager
 import com.lessonmaker.app.models.CommonAPIResponse
 import com.lessonmaker.app.models.auth.LoginAPIResponse
 import com.lessonmaker.app.models.book.BooksResponse
+import com.lessonmaker.app.models.course.AllowCourseAccessApiResponse
+import com.lessonmaker.app.models.course.AllowedStudentCourseAccessApiResponse
 import com.lessonmaker.app.models.student.StudentMyCoursesApiResponse
+import com.lessonmaker.app.models.student.editAccess.EditAccessCoursesApiResponse
 import com.lessonmaker.app.models.student.lesson.StudentMyCourseLessonApiResponse
 import com.lessonmaker.app.models.student.lesson.lessonContent.StudentLessonContentApiResponse
 import com.lessonmaker.app.models.teacher.AddLessonRequest
@@ -178,6 +181,32 @@ class ApiService(
         }
     }
 
+    suspend fun allowAccessApi(
+        teacherId: Int,
+        studentId: Int,
+        courseId: Int
+    ): ApiResult<CommonAPIResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safePost(urlString = NetworkUtils.BaseUrl.plus("Course/allowAccess"), block = {
+                parameter("teacherId", teacherId)
+                parameter("studentId", studentId)
+                parameter("courseId", courseId)
+
+            })
+        }
+    }
+    suspend fun revokeAccessApi(
+        accessId: Int,
+    ): ApiResult<CommonAPIResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safePost(urlString = NetworkUtils.BaseUrl.plus("Course/revokeAccess"), block = {
+                parameter("accessId",accessId)
+
+
+            })
+        }
+    }
+
 
 
     suspend fun getStudentMyCoursesApi(studentId: Int): ApiResult<StudentMyCoursesApiResponse> {
@@ -213,6 +242,66 @@ class ApiService(
                 urlString = NetworkUtils.BaseUrl.plus("Student/getLessonContent"),
                 block = {
                     parameter("lessonId", lessonId)
+
+                }
+            )
+        }
+    }
+
+    suspend fun getStudentToAllowCourseApi(teacherId: Int,courseId: Int?): ApiResult<AllowCourseAccessApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Course/getAllowStudents"),
+                block = {
+                    parameter("teacherId",teacherId)
+                    if(courseId !=null)
+                    {
+                        parameter("courseId",courseId)
+                    }
+
+                }
+            )
+        }
+    }
+
+    suspend fun getAllowedStudentApi(teacherId: Int,courseId: Int?): ApiResult<AllowedStudentCourseAccessApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Course/getAllowedStudents"),
+                block = {
+                    parameter("teacherId",teacherId)
+                    if(courseId !=null)
+                    {
+                        parameter("courseId",courseId)
+                    }
+
+                }
+            )
+        }
+    }
+    suspend fun getStudentEditAccessCoursesApi(studentId: Int): ApiResult<EditAccessCoursesApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Student/getEditCourses"),
+                block = {
+                    parameter("studentId", studentId)
+
+
+                }
+            )
+        }
+    }
+
+    suspend fun getStudentEditAccessCoursesLessonApi(teacherId: Int,studentId: Int,courseId: Int,search: String): ApiResult<StudentMyCourseLessonApiResponse> {
+        return safeApiCall(commonLoading = commonLoading) {
+            client.safeGet(
+                urlString = NetworkUtils.BaseUrl.plus("Student/getEditCoursesLesson"),
+                block = {
+                    parameter("teacherId", teacherId)
+                    parameter("courseId",courseId)
+                    parameter("studentId",studentId)
+                    parameter("search",search)
+
 
                 }
             )

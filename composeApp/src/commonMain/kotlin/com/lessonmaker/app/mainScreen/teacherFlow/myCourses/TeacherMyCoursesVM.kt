@@ -32,7 +32,7 @@ class TeacherMyCoursesVM(
 
     var showEmptyScreen by mutableStateOf(false)
 
-    var selectedCourse by mutableStateOf<TeacherCourseData?>(null)
+
 
     private val _courses = MutableStateFlow<List<TeacherCourseData>>(emptyList())
 

@@ -37,36 +37,23 @@ fun AllowAccessScreenFlow(
     dashboardRoutes: (String) -> Unit
 ) {
     val teacherMyCoursesVM= koinViewModel<TeacherMyCoursesVM>()
+    val allowAccessVM = koinViewModel<AllowAccessVM>()
     val teacherId = dashboardViewModel.sharedPreferenceManager.getTeacher()?.id?:0
 
-   // val courses = remember { listOf("Programming Fundamentals", "Object Oriented Programming","Data Structure $ Algorithms") }
-    val students = remember {
-        listOf(
-            AccessStudent(1, "Muhammad Zain", "25-ARID-1148-BSCS"),
-            AccessStudent(2, "Muhammad Ali", "25-ARID-1068-BSCS"),
-            AccessStudent(3, "Haris Saleem", "25-ARID-1002-BSCS"),
-        )
-    }
+    val students by allowAccessVM.students.collectAsState()
+
     LaunchedEffect(Unit){
         teacherMyCoursesVM.getAllCourses(teacherId = teacherId)
+        allowAccessVM.getAllStudents(teacherId = teacherId)
     }
 
     val courses by teacherMyCoursesVM.courses.collectAsState()
     var showSheet by remember { mutableStateOf(false) }
 
-    var selectedCourse by remember { mutableStateOf("") }
     var courseError by remember { mutableStateOf<String?>(null) }
-    var menuOpen by remember { mutableStateOf(false) }
-    var fieldWidthPx by remember { mutableStateOf(0) }
+
     var query by remember { mutableStateOf("") }
-    var selectedStudent by remember { mutableStateOf<AccessStudent?>(null) }
     val density = LocalDensity.current
-
-    val filtered = students.filter {
-        it.name.contains(query, ignoreCase = true) || it.arid.contains(query, ignoreCase = true)
-    }
-
-
 
     Column(Modifier.fillMaxSize().background(White)) {
         Column(
@@ -74,16 +61,16 @@ fun AllowAccessScreenFlow(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            Box(Modifier.onSizeChanged { fieldWidthPx = it.width }) {
+            Box(Modifier) {
                 AppDropdownField(
-                    text = teacherMyCoursesVM.selectedCourse?.courseName?:"",
+                    text = allowAccessVM.selectedCourse?.courseName?:"",
                     hint = "Select the course you want to give access",
                     errorMessage = courseError,
                     onClick = {
                        showSheet = true
                     },
                     onClear = {
-                       teacherMyCoursesVM.selectedCourse =null
+                        allowAccessVM.selectedCourse =null
                         courseError = null
                     }
                 )
@@ -95,9 +82,10 @@ fun AllowAccessScreenFlow(
                 onValueChange = { query = it }
             )
 
+            Spacer(modifier = Modifier.height(10.dp))
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(filtered, key = { it.id }) { s ->
-                    val selected = selectedStudent?.id == s.id
+                items(students) { s ->
+                    val selected = allowAccessVM.selectedStudent?.studentId == s?.studentId
                     Column(
                         Modifier
                             .fillMaxWidth()
@@ -107,12 +95,12 @@ fun AllowAccessScreenFlow(
                                 RoundedCornerShape(8.dp)
                             )
                             .clickable(interactionSource = MutableInteractionSource(),
-                                indication = null) { selectedStudent = s }
+                                indication = null) {allowAccessVM.selectedStudent = s }
                             .padding(12.dp)
                     ) {
-                        Text(s.name, color = if (selected) Color.White else bgColor, style = TextSize13().bold())
+                        Text(s.studentName?:"", color = if (selected) Color.White else bgColor, style = TextSize13().bold())
                         Text(
-                            s.arid,
+                            s.aridNo?:"",
                             color = if (selected) Color.White.copy(alpha = 0.85f) else loginTabUnselectedTxtClr,
                             style = TextSize12().Regular()
                         )
@@ -125,11 +113,16 @@ fun AllowAccessScreenFlow(
             Box(Modifier.fillMaxWidth().height(1.dp).background(greyE3))
             Box(Modifier.padding(16.dp)) {
                 MainButtonNew(heading = "Allow Access") {
-                    if (selectedCourse.isEmpty()) {
-                        courseError = "Please select a course"
-                    } else if (selectedStudent != null) {
+                    allowAccessVM.allowAccess(
+                        teacherId = teacherId,
+                        courseId = allowAccessVM.selectedCourse?.courseId?:0,
+                        studentId = allowAccessVM.selectedStudent?.studentId?:0,
+                        callBack = {
 
-                    }
+                            allowAccessVM.getAllStudents(teacherId = teacherId)
+                        }
+                    )
+
                 }
             }
         }
@@ -137,13 +130,15 @@ fun AllowAccessScreenFlow(
     }
     if (showSheet) {
         CourseSelectionBottomSheet(
-            selectedCourse = teacherMyCoursesVM.selectedCourse,
+            selectedCourse = allowAccessVM.selectedCourse,
             courseList = courses,
             commonInterface = object : BottomSheetCommonInterface {
                 override fun closeSheet() { showSheet = false }
             },
             onSubmit = {
-                teacherMyCoursesVM.selectedCourse = it
+                allowAccessVM.selectedCourse = it
+                allowAccessVM.getAllStudents(teacherId = teacherId, courseId = allowAccessVM.selectedCourse?.courseId)
+
                 showSheet = false
             }
         )

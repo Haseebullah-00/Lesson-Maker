@@ -923,13 +923,15 @@ fun Navigations(
             val courseId = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.COURSE_ID) ?: ""
             val code = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.COURSE_CODE) ?: ""
             val name = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.COURSE_NAME) ?: ""
+            val teacherId = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.TEACHER_ID) ?: ""
+            val editCourseTeacherName  = it.arguments?.getString(DashboardSubScreen.StudentEditCourseLessonsScreenFlow.TEACHER_NAME) ?: ""
             dashboardViewModel.toolBarViewModel.updateToolBar(
                 showToolbar = true, showBackImage = true, showBackText = true,
                 backHeading = "$code Lecture Notes",
                 subHeading = "$name · Edit mode"
             )
             dashboardViewModel.updateBottomNavigation(showBottomNavigation = true)
-            StudentEditCourseLessonsScreenFlow(courseId, code, name, dashboardViewModel){
+            StudentEditCourseLessonsScreenFlow(courseId, code, name, teacherId = teacherId, teacherName = editCourseTeacherName,dashboardViewModel){
                 navController.clearBackIfAtDashBoard(
                     newPath = it,
                     dashboardViewModel = dashboardViewModel

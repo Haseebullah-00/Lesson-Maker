@@ -23,6 +23,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.Image
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,12 +36,16 @@ import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.lessonmaker.app.base.BaseListWithRefresh
+import com.lessonmaker.app.common.extensionFunctions.toDisplayDate
+import com.lessonmaker.app.common.widgets.EmptyScreen
 import com.lessonmaker.app.mainScreen.DashboardViewModel
 import com.lessonmaker.app.mainScreen.studentFlow.EditRequestStatus
 import com.lessonmaker.app.mainScreen.studentFlow.StudentEditCourse
 import com.lessonmaker.app.mainScreen.studentFlow.StudentEditRequest
 import com.lessonmaker.app.mainScreen.studentFlow.StudentEditStore
 import com.lessonmaker.app.mainScreen.teacherFlow.profile.InitialsAvatar
+import com.lessonmaker.app.models.student.editAccess.CourseAccessData
 import com.lessonmaker.app.navigationControler.DashboardSubScreen
 import com.lessonmaker.app.theme.BackgorundColor
 import com.lessonmaker.app.theme.Regular
@@ -63,54 +69,144 @@ import com.lessonmaker.app.theme.statusPendingText
 import com.lessonmaker.app.theme.statusRejectedBg
 import com.lessonmaker.app.theme.statusRejectedText
 import lessonmaker.composeapp.generated.resources.Res
+import lessonmaker.composeapp.generated.resources.ic_empty_courses
 import lessonmaker.composeapp.generated.resources.ic_next
 import lessonmaker.composeapp.generated.resources.lesson_ic
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun StudentEditAccessScreenFlow(
     dashboardViewModel: DashboardViewModel,
     dashboardRoutes: (String) -> Unit
 ) {
+    val editAccessVM = koinViewModel<StudentEditAccessVM>()
     var tab by remember { mutableStateOf(0) }
+    val studentId=dashboardViewModel.sharedPreferenceManager.getStudent()?.id?:0
+    val editCoursesData by editAccessVM.courses.collectAsState()
+    LaunchedEffect(Unit){
+        editAccessVM.getAllCourses(studentId = studentId)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgorundColor)
-    ) {
-        EditAccessTabs(selected = tab, onSelect = { tab = it })
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (tab == 0) {
-                val byTeacher = StudentEditStore.courses.groupBy { it.teacher }
-                byTeacher.forEach { (teacher, list) ->
-                    item(key = "t_$teacher") {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            InitialsAvatar(name = teacher.replace("Dr. ", ""), size = 28.dp)
-                            Spacer(Modifier.width(8.dp))
-                            Text(text = teacher, color = bgColor, style = TextSize14().semiBold())
+    )
+    {
+        EditAccessTabs(selected = tab,
+            onSelect = {
+            tab = it
+               // editAccessVM.getAllCourses(studentId = studentId)
+
+            }
+        )
+        if(tab==0){
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                BaseListWithRefresh(
+                    viewModel = editAccessVM,
+                    emptyView = {
+                        if (editAccessVM.showEmptyScreen) {
+                            EmptyScreen(
+                                emptyImage = Res.drawable.ic_empty_courses,
+                                message = "No Edit access courses  yet",
+                                subHeading = " courses will appear here once your instructor access them.",
+                                showHomeButton = false,
+                                imgModifier = Modifier.size(128.dp)
+                            ) {
+                                dashboardRoutes.invoke(DashboardSubScreen.LaunchHomeScreenFlow.route)
+                            }
                         }
+                    },
+                    refreshCall = {
+                        editAccessVM.getAllCourses(studentId = studentId)
                     }
-                    items(list, key = { "c_${it.id}" }) { course ->
-                        EditCourseCard(course) {
-                            dashboardRoutes.invoke(
-                                DashboardSubScreen.StudentEditCourseLessonsScreenFlow.createRoute(
-                                    course.id, course.code, course.title
-                                )
-                            )
+                ) {
+                    LazyColumn(
+                        modifier = Modifier,
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(editCoursesData) { courseAccessData ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                InitialsAvatar(name = courseAccessData?.teacherName?:"".replace("Dr. ", ""), size = 28.dp)
+                                Spacer(Modifier.width(8.dp))
+                                Text(text = courseAccessData?.teacherName?:"", color = bgColor, style = TextSize14().semiBold())
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val courses = courseAccessData?.courses?:emptyList()
+                            courses.forEach { course->
+                                EditCourseCard(course) {
+                                    dashboardRoutes.invoke(
+                                        DashboardSubScreen.StudentEditCourseLessonsScreenFlow.createRoute(
+                                            "${course?.courseId?:0}", course?.courseName?:"", course?.courseName?:"",
+                                            teacherId = "${courseAccessData?.teacherId?:0}",
+                                            teacherName = courseAccessData?.teacherName?:""
+                                        )
+                                    )
+                                }
+
+                            }
+
                         }
+
+
                     }
+
                 }
-            } else {
-                items(StudentEditStore.requests, key = { "r_${it.id}" }) { RequestCard(it) }
             }
         }
+        else{
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(StudentEditStore.requests, key = { "r_${it.id}" }) { RequestCard(it) }
+
+            }
+        }
+
     }
+
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(BackgorundColor)
+//    ) {
+//
+//
+//        LazyColumn(
+//            modifier = Modifier.weight(1f),
+//            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+//            verticalArrangement = Arrangement.spacedBy(12.dp)
+//        ) {
+//            if (tab == 0) {
+//                val byTeacher = StudentEditStore.courses.groupBy { it.teacher }
+//                byTeacher.forEach { (teacher, list) ->
+//                    item(key = "t_$teacher") {
+//                        Row(verticalAlignment = Alignment.CenterVertically) {
+//                            InitialsAvatar(name = teacher.replace("Dr. ", ""), size = 28.dp)
+//                            Spacer(Modifier.width(8.dp))
+//                            Text(text = teacher, color = bgColor, style = TextSize14().semiBold())
+//                        }
+//                    }
+//                    items(list, key = { "c_${it.id}" }) { course ->
+//                        EditCourseCard(course) {
+//                            dashboardRoutes.invoke(
+//                                DashboardSubScreen.StudentEditCourseLessonsScreenFlow.createRoute(
+//                                    course.id, course.code, course.title
+//                                )
+//                            )
+//                        }
+//                    }
+//                }
+//            } else {
+//                items(StudentEditStore.requests, key = { "r_${it.id}" }) { RequestCard(it) }
+//            }
+//        }
+//    }
 }
 
 @Composable
@@ -158,7 +254,7 @@ private fun CodeChip(code: String) {
 }
 
 @Composable
-private fun EditCourseCard(course: StudentEditCourse, onClick: () -> Unit) {
+private fun EditCourseCard(course: CourseAccessData?, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
     Column(
         modifier = Modifier
@@ -172,12 +268,12 @@ private fun EditCourseCard(course: StudentEditCourse, onClick: () -> Unit) {
             )
             .padding(16.dp)
     ) {
-        CodeChip(course.code)
+        CodeChip(course?.courseCode?:"")
         Spacer(Modifier.height(12.dp))
-        Text(text = course.title, color = bgColor, style = TextSize16().bold())
+        Text(text = course?.courseName?:"", color = bgColor, style = TextSize16().bold())
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "Edit access since ${course.since}",
+            text = "Edit access since ${course?.accessDate.toDisplayDate()}",
             color = loginTabUnselectedTxtClr,
             style = TextSize12().Regular()
         )
@@ -195,7 +291,7 @@ private fun EditCourseCard(course: StudentEditCourse, onClick: () -> Unit) {
                 )
                 Spacer(Modifier.width(5.dp))
                 Text(
-                    text = "${course.notesCount} Lecture Notes",
+                    text = "${course?.lessonCount?:0} Lecture Notes",
                     color = loginTabUnselectedTxtClr,
                     style = TextSize12().Regular()
                 )
